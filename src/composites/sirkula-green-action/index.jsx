@@ -9,6 +9,7 @@ import {
   useMyGreenActionStats,
   useGreenActionCategories,
   useCreateGreenAction,
+  useGreenActionImpact,
 } from "@/hooks/use-green-actions";
 import {
   setSelectedLocation,
@@ -61,6 +62,11 @@ import {
   Award,
   Target,
   X,
+  TrendingUp,
+  MapPin,
+  BarChart3,
+  Leaf,
+  Globe,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SparklesText } from "@/components/ui/sparkles-text";
@@ -85,6 +91,8 @@ export default function SirkulaGreenActionComposite() {
     category: "",
     subCategory: "",
     description: "",
+    quantity: "",
+    actionType: "",
     media: null,
   });
   const [selectedLocation, setLocation] = useState(null);
@@ -94,6 +102,7 @@ export default function SirkulaGreenActionComposite() {
     useGreenActionCategories();
   const { data: actionsData, isLoading: actionsLoading } = useMyGreenActions();
   const { data: statsData, isLoading: statsLoading } = useMyGreenActionStats();
+  const { data: impactData, isLoading: impactLoading } = useGreenActionImpact();
   const createMutation = useCreateGreenAction();
 
   useEffect(() => {
@@ -110,11 +119,11 @@ export default function SirkulaGreenActionComposite() {
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi ukuran file maksimal 1MB (1 * 1024 * 1024 bytes)
-      const maxSize = 1 * 1024 * 1024;
+      const isVideo = file.type.startsWith("video/");
+      const maxSize = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
       if (file.size > maxSize) {
         setShowFileSizeDialog(true);
-        e.target.value = ""; // Reset input file
+        e.target.value = "";
         return;
       }
       setFormData({ ...formData, media: file });
@@ -133,10 +142,15 @@ export default function SirkulaGreenActionComposite() {
       return;
     }
 
+    if (!formData.quantity || Number(formData.quantity) <= 0) return;
+
     const submitData = new FormData();
     submitData.append("category", formData.category);
     submitData.append("subCategory", formData.subCategory);
     submitData.append("description", formData.description);
+    submitData.append("quantity", formData.quantity);
+    if (formData.actionType)
+      submitData.append("actionType", formData.actionType);
     submitData.append("latitude", selectedLocation.lat);
     submitData.append("longitude", selectedLocation.lng);
     submitData.append("media", formData.media);
@@ -148,6 +162,8 @@ export default function SirkulaGreenActionComposite() {
           category: "",
           subCategory: "",
           description: "",
+          quantity: "",
+          actionType: "",
           media: null,
         });
         setLocation(null);
@@ -165,6 +181,7 @@ export default function SirkulaGreenActionComposite() {
   const categories = categoriesData?.data || {};
   const actions = actionsData?.data || [];
   const stats = statsData?.data || {};
+  const impact = impactData?.data || null;
 
   const selectedCategoryData = formData.category
     ? categories[formData.category]
@@ -213,9 +230,10 @@ export default function SirkulaGreenActionComposite() {
               Ukuran File Terlalu Besar
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
-              File yang Anda pilih melebihi batas maksimal <strong>1MB</strong>.
-              Silakan pilih file dengan ukuran yang lebih kecil atau kompres
-              file Anda terlebih dahulu.
+              File yang Anda pilih melebihi batas maksimal (Gambar:{" "}
+              <strong>10MB</strong>, Video: <strong>100MB</strong>). Silakan
+              pilih file dengan ukuran yang lebih kecil atau kompres file Anda
+              terlebih dahulu.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -274,13 +292,15 @@ export default function SirkulaGreenActionComposite() {
           </div>
         ) : (
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="border-slate-200 hover:shadow-lg transition-shadow">
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-slate-600">
                     Total Aksi
                   </CardTitle>
-                  <Target className="h-5 w-5 text-blue-600" />
+                  <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <Target className="h-4.5 w-4.5 text-blue-600" />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -289,13 +309,15 @@ export default function SirkulaGreenActionComposite() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 hover:shadow-lg transition-shadow">
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-slate-600">
                     Total Poin
                   </CardTitle>
-                  <Award className="h-5 w-5 text-amber-600" />
+                  <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <Award className="h-4.5 w-4.5 text-amber-600" />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -304,13 +326,15 @@ export default function SirkulaGreenActionComposite() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 hover:shadow-lg transition-shadow sm:col-span-2 lg:col-span-1">
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-slate-600">
                     Aksi Terverifikasi
                   </CardTitle>
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -323,8 +347,8 @@ export default function SirkulaGreenActionComposite() {
         )}
 
         {showForm && (
-          <Card className="border-slate-200 shadow-lg">
-            <CardHeader className="bg-linear-to-r border-b border-slate-200 py-2">
+          <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
+            <CardHeader className="border-b border-slate-100 py-4">
               <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
                 <Sparkles className="h-6 w-6 text-emerald-600" />
                 Kirim Aksi Hijau Baru
@@ -440,7 +464,7 @@ export default function SirkulaGreenActionComposite() {
                       <strong>Kriteria:</strong>{" "}
                       {
                         selectedCategoryData.subCategories.find(
-                          (s) => s.id === formData.subCategory
+                          (s) => s.id === formData.subCategory,
                         )?.criteria
                       }
                     </AlertDescription>
@@ -463,6 +487,42 @@ export default function SirkulaGreenActionComposite() {
                   />
                 </div>
 
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity" className="text-sm font-medium">
+                      Kuantitas *
+                    </Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="0.01"
+                      step="any"
+                      value={formData.quantity}
+                      onChange={(e) =>
+                        setFormData({ ...formData, quantity: e.target.value })
+                      }
+                      placeholder="Masukkan jumlah (contoh: 5)"
+                      required
+                      className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="actionType" className="text-sm font-medium">
+                      Satuan (Opsional)
+                    </Label>
+                    <Input
+                      id="actionType"
+                      type="text"
+                      value={formData.actionType}
+                      onChange={(e) =>
+                        setFormData({ ...formData, actionType: e.target.value })
+                      }
+                      placeholder="Contoh: kg, pohon, item"
+                      className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">
                     Pilih Lokasi di Peta *
@@ -477,7 +537,7 @@ export default function SirkulaGreenActionComposite() {
                   <Label htmlFor="media" className="text-sm font-medium">
                     Upload Media (Gambar/Video) *{" "}
                     <span className="text-xs text-muted-foreground">
-                      (Maks. 1MB)
+                      (Maks. 10MB gambar, 100MB video)
                     </span>
                   </Label>
                   <Input
@@ -494,7 +554,7 @@ export default function SirkulaGreenActionComposite() {
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 h-8 w-8 rounded-full z-10 shadow-lg"
+                        className="absolute top-2 right-2 h-8 w-8 rounded-full z-10"
                         onClick={() => {
                           setMediaPreview(null);
                           setFormData({ ...formData, media: null });
@@ -527,7 +587,9 @@ export default function SirkulaGreenActionComposite() {
                     !selectedLocation ||
                     !formData.media ||
                     !formData.category ||
-                    !formData.subCategory
+                    !formData.subCategory ||
+                    !formData.quantity ||
+                    Number(formData.quantity) <= 0
                   }
                 >
                   <Upload className="h-5 w-5" />
@@ -538,8 +600,8 @@ export default function SirkulaGreenActionComposite() {
           </Card>
         )}
 
-        <Card className="border-slate-200">
-          <CardHeader className="border-b border-slate-200">
+        <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
+          <CardHeader className="border-b border-slate-100">
             <CardTitle className="text-xl sm:text-2xl">
               Aksi Hijau Saya
             </CardTitle>
@@ -583,7 +645,7 @@ export default function SirkulaGreenActionComposite() {
                   return (
                     <div
                       key={action.id}
-                      className="flex flex-col sm:flex-row gap-4 p-4 border border-slate-200 rounded-lg hover:shadow-md transition-all hover:border-emerald-200"
+                      className="flex flex-col sm:flex-row gap-4 p-4 border border-slate-200/80 rounded-xl hover:border-emerald-300 transition-colors"
                     >
                       <div className="relative h-48 sm:h-28 sm:w-28 shrink-0 rounded-lg overflow-hidden">
                         {action.mediaType === "IMAGE" ? (
@@ -617,7 +679,7 @@ export default function SirkulaGreenActionComposite() {
                               day: "numeric",
                               month: "short",
                               year: "numeric",
-                            }
+                            },
                           )}
                         </p>
                         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
@@ -628,6 +690,11 @@ export default function SirkulaGreenActionComposite() {
                           <span className="text-sm text-slate-600">
                             Skor AI: <strong>{action.aiScore}%</strong>
                           </span>
+                          {action.quantity && (
+                            <span className="text-sm text-slate-600">
+                              {action.quantity} {action.actionType || ""}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex sm:flex-col gap-2 sm:shrink-0">
@@ -655,6 +722,211 @@ export default function SirkulaGreenActionComposite() {
             )}
           </CardContent>
         </Card>
+
+        {impactLoading ? (
+          <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm overflow-hidden">
+            <CardHeader className="pb-4">
+              <Skeleton className="h-6 w-48 mb-2" />
+              <Skeleton className="h-4 w-72" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="space-y-2 p-4 rounded-xl bg-slate-50/50"
+                  >
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-8 w-14" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+              </div>
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-40" />
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                  <Skeleton className="h-16 w-full rounded-xl" />
+                  <Skeleton className="h-16 w-full rounded-xl" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          impact && (
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <Globe className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg sm:text-xl">
+                      Dampak Aksi Pengguna Sirkula
+                    </CardTitle>
+                    <CardDescription className="text-sm">
+                      Ringkasan kontribusi lingkungan
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+                  <div className="p-4 rounded-xl bg-linear-to-br from-emerald-50/80 to-teal-50/60 border border-emerald-100/60">
+                    <p className="text-xs font-medium text-emerald-600 mb-1">
+                      Total Kuantitas
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-emerald-700">
+                      {impact.aggregation?.totalQuantity || 0}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-linear-to-br from-blue-50/80 to-sky-50/60 border border-blue-100/60">
+                    <p className="text-xs font-medium text-blue-600 mb-1">
+                      Total Aksi
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-700">
+                      {impact.aggregation?.totalActions || 0}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-linear-to-br from-violet-50/80 to-purple-50/60 border border-violet-100/60">
+                    <p className="text-xs font-medium text-violet-600 mb-1">
+                      Kecamatan
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-violet-700">
+                      {impact.aggregation?.totalUniqueDistricts || 0}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-linear-to-br from-amber-50/80 to-yellow-50/60 border border-amber-100/60">
+                    <p className="text-xs font-medium text-amber-600 mb-1">
+                      Kota
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-amber-700">
+                      {impact.aggregation?.totalUniqueCities || 0}
+                    </p>
+                  </div>
+                </div>
+
+                {impact.insight && (
+                  <div className="p-4 rounded-xl bg-linear-to-br from-emerald-50/60 to-teal-50/40 border border-emerald-100/50">
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <Leaf className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-emerald-700 mb-1">
+                          Insight AI
+                        </p>
+                        <p className="text-sm text-emerald-800 leading-relaxed">
+                          {impact.insight
+                            .replace(/\*\*/g, "")
+                            .replace(/\*/g, "")
+                            .replace(/^#{1,6}\s+/gm, "")
+                            .replace(/^[-*+]\s+/gm, "- ")
+                            .trim()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  {impact.topDistrict && (
+                    <div className="p-4 rounded-xl border border-slate-200/60 bg-slate-50/40">
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-4 w-4 text-emerald-600" />
+                        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                          Kecamatan Teratas
+                        </p>
+                      </div>
+                      <p className="text-base font-semibold text-slate-900">
+                        {impact.topDistrict.district}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {impact.topDistrict.city}
+                      </p>
+                      <div className="mt-2 flex gap-4 text-xs text-slate-500">
+                        <span>{impact.topDistrict.totalActions} aksi</span>
+                        <span>
+                          {impact.topDistrict.totalQuantity} kuantitas
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {impact.monthlyTrend?.length > 0 && (
+                    <div className="p-4 rounded-xl border border-slate-200/60 bg-slate-50/40">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TrendingUp className="h-4 w-4 text-blue-600" />
+                        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                          Tren Bulanan
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {impact.monthlyTrend.slice(0, 3).map((trend) => (
+                          <div
+                            key={trend.month}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span className="text-slate-600">
+                              {new Date(trend.month + "-01").toLocaleDateString(
+                                "id-ID",
+                                { month: "short", year: "numeric" },
+                              )}
+                            </span>
+                            <div className="flex gap-3 text-xs">
+                              <span className="text-slate-500">
+                                {trend.totalActions} aksi
+                              </span>
+                              <span className="font-medium text-emerald-600">
+                                {trend.totalQuantity} qty
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {impact.byDistrict?.length > 1 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <BarChart3 className="h-4 w-4 text-slate-500" />
+                      <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                        Distribusi per Kecamatan
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      {impact.byDistrict.map((district) => (
+                        <div
+                          key={`${district.district}-${district.city}`}
+                          className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-white/40"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">
+                              {district.district}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {district.city}
+                            </p>
+                          </div>
+                          <div className="flex gap-4 text-xs text-slate-500">
+                            <span>{district.totalActions} aksi</span>
+                            <span className="font-medium text-emerald-600">
+                              {district.totalQuantity} qty
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        )}
       </div>
     </>
   );

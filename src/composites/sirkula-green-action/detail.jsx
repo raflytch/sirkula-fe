@@ -193,8 +193,8 @@ export default function GreenActionDetailComposite({ id }) {
         </div>
       </div>
 
-      <Card className="border-slate-200 shadow-lg">
-        <CardHeader className="bg-slate-50 border-b border-slate-200">
+      <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1 min-w-0">
               <CardTitle className="text-xl sm:text-2xl lg:text-3xl mb-3 wrap-break-word">
@@ -224,7 +224,7 @@ export default function GreenActionDetailComposite({ id }) {
           </div>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
-          <div className="rounded-lg overflow-hidden border-2 border-slate-200">
+          <div className="rounded-xl overflow-hidden border border-slate-200/80">
             {action.mediaType === "IMAGE" ? (
               <img
                 src={action.mediaUrl}
@@ -240,14 +240,16 @@ export default function GreenActionDetailComposite({ id }) {
             )}
           </div>
 
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="border-slate-200 hover:shadow-md transition-shadow">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-slate-600">
                     Poin Didapat
                   </CardTitle>
-                  <Award className="h-5 w-5 text-emerald-600" />
+                  <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <Award className="h-4.5 w-4.5 text-emerald-600" />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -259,13 +261,15 @@ export default function GreenActionDetailComposite({ id }) {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 hover:shadow-md transition-shadow">
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-slate-600">
                     Skor AI
                   </CardTitle>
-                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <Sparkles className="h-4.5 w-4.5 text-blue-600" />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -277,7 +281,28 @@ export default function GreenActionDetailComposite({ id }) {
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-slate-200 hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
+            {action.quantity != null && (
+              <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-slate-600">
+                    Kuantitas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold text-slate-900">
+                      {action.quantity}
+                    </span>
+                    {action.actionType && (
+                      <span className="text-sm text-slate-500">
+                        {action.actionType}
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600">
                   Kategori
@@ -340,7 +365,7 @@ export default function GreenActionDetailComposite({ id }) {
                 <MapPin className="h-5 w-5 text-rose-600" />
                 Lokasi
               </h3>
-              <div className="rounded-lg overflow-hidden border-2 border-slate-200">
+              <div className="rounded-xl overflow-hidden border border-slate-200/80">
                 <Map
                   initialPosition={{
                     lat: action.latitude,

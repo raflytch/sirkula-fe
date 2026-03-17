@@ -116,3 +116,38 @@ export const useGetAllGreenActions = (params = {}) => {
     queryFn: () => greenActionService.getAllGreenActions(params),
   });
 };
+
+const IMPACT_CACHE_KEY = "green-action-impact-cache";
+const IMPACT_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+export const useGreenActionImpact = () => {
+  return useQuery({
+    queryKey: ["green-action-impact"],
+    queryFn: async () => {
+      // Check localStorage cache before hitting the API
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem(IMPACT_CACHE_KEY);
+          if (raw) {
+            const cached = JSON.parse(raw);
+            if (Date.now() - cached.timestamp <= IMPACT_CACHE_DURATION) {
+              return cached.data;
+            }
+            localStorage.removeItem(IMPACT_CACHE_KEY);
+          }
+        } catch {}
+      }
+
+      const data = await greenActionService.getImpact();
+      try {
+        localStorage.setItem(
+          IMPACT_CACHE_KEY,
+          JSON.stringify({ data, timestamp: Date.now() }),
+        );
+      } catch {}
+      return data;
+    },
+    staleTime: Infinity,
+    gcTime: IMPACT_CACHE_DURATION,
+  });
+};

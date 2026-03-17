@@ -46,4 +46,9 @@ export const greenActionService = {
     const response = await httpClient.get("/green-actions", { params });
     return response.data;
   },
+
+  getImpact: async () => {
+    const response = await httpClient.get("/green-actions/impact");
+    return response.data;
+  },
 };
