@@ -51,7 +51,7 @@ export default function ClientLayout({ children }) {
       />
       <div className="relative z-10">
         {!hideNavbar && <Navbar01 />}
-        {children}
+        <div className={!hideNavbar ? "pt-14" : ""}>{children}</div>
       </div>
     </div>
   );
