@@ -1,5 +1,5 @@
-import AuthSelectComposite from "@/composites/auth/auth-select";
+import UserLoginComposite from "@/composites/auth/user-login";
 
 export default function AuthPage() {
-  return <AuthSelectComposite />;
+  return <UserLoginComposite />;
 }

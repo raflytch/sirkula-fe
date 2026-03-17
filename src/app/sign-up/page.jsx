@@ -1,5 +1,5 @@
-import SignUpSelectComposite from "@/composites/sign-up/sign-up-select";
+import UserRegisterComposite from "@/composites/sign-up/user-register";
 
 export default function SignUpPage() {
-  return <SignUpSelectComposite />;
+  return <UserRegisterComposite />;
 }

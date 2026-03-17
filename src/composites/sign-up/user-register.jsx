@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,151 +48,161 @@ export default function UserRegisterComposite() {
 
   return (
     <AuthLayout>
-      <Card className="w-full max-w-md border shadow-none mx-4 sm:mx-0 relative overflow-hidden">
-        <BorderBeam size={250} duration={12} delay={9} />
-        <CardHeader className="text-center px-4 sm:px-6">
-          <Link
-            href="/sign-up"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 w-fit"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Kembali
-          </Link>
-          <CardTitle className="text-xl sm:text-2xl font-bold">
-            Daftar sebagai Pengguna
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Buat akun untuk mulai berkontribusi dalam pengelolaan sampah
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nama Lengkap</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Masukkan nama lengkap"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nama@email.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+      <div className="w-full max-w-md px-4">
+        <Card className="w-full border border-gray-100 rounded-2xl overflow-hidden relative">
+          <BorderBeam size={250} duration={12} delay={9} />
+          <CardHeader className="text-center pb-2 pt-8 px-6 sm:px-8">
+            <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Buat Akun
+            </CardTitle>
+            <CardDescription className="text-base mt-1">
+              Daftar untuk mulai berkontribusi dalam pengelolaan sampah
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-6 sm:px-8 pb-8">
+            <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Nama Lengkap
+                </Label>
                 <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Minimal 8 karakter"
-                  value={formData.password}
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Masukkan nama lengkap"
+                  value={formData.name}
                   onChange={handleChange}
                   required
-                  className="border pr-10"
+                  className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-              <div className="relative">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </Label>
                 <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Ulangi password"
-                  value={formData.confirmPassword}
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="nama@email.com"
+                  value={formData.email}
                   onChange={handleChange}
                   required
-                  className="border pr-10"
+                  className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
               </div>
-            </div>
-            <Button
-              type="submit"
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={isPending}
-            >
-              {isPending ? "Memproses..." : "Daftar"}
-            </Button>
-          </form>
-
-          <div className="my-6">
-            <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground">
-                atau
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full border hover:bg-gray-50 transition-colors"
-            onClick={() => {
-              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/users/auth/google`;
-            }}
-          >
-            <Image
-              src={images.googleLogo}
-              alt="Google"
-              width={20}
-              height={20}
-              className="mr-2"
-            />
-            Daftar dengan Google
-          </Button>
-
-          <div className="pt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Sudah punya akun?{" "}
-              <Link
-                href="/auth/user"
-                className="text-green-600 hover:underline font-medium"
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Minimal 8 karakter"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="h-11 border border-gray-200 rounded-xl px-4 pr-11 focus:border-green-400 focus:ring-green-400/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4.5 h-4.5" />
+                    ) : (
+                      <Eye className="w-4.5 h-4.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Konfirmasi Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Ulangi password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className="h-11 border border-gray-200 rounded-xl px-4 pr-11 focus:border-green-400 focus:ring-green-400/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4.5 h-4.5" />
+                    ) : (
+                      <Eye className="w-4.5 h-4.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full h-11 rounded-xl text-base font-semibold bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white border-0 transition-all duration-200"
+                disabled={isPending}
               >
-                Masuk di sini
+                {isPending ? "Memproses..." : "Daftar"}
+              </Button>
+            </form>
+
+            <div className="my-6">
+              <div className="relative">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs text-gray-400">
+                  atau
+                </span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full h-11 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors font-medium"
+              onClick={() => {
+                window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/users/auth/google`;
+              }}
+            >
+              <Image
+                src={images.googleLogo}
+                alt="Google"
+                width={20}
+                height={20}
+                className="mr-2.5"
+              />
+              Daftar dengan Google
+            </Button>
+
+            <div className="mt-6 text-center space-y-3">
+              <p className="text-sm text-gray-500">
+                Sudah punya akun?{" "}
+                <Link
+                  href="/auth"
+                  className="text-green-600 hover:text-green-700 font-semibold transition-colors"
+                >
+                  Masuk di sini
+                </Link>
+              </p>
+              <Link
+                href="/sign-up/umkm"
+                className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600 font-medium transition-colors"
+              >
+                <Store className="w-4 h-4" />
+                Ingin daftar sebagai UMKM?
               </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </AuthLayout>
   );
 }

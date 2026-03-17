@@ -1,5 +1,5 @@
-import UserRegisterComposite from "@/composites/sign-up/user-register";
+import { redirect } from "next/navigation";
 
 export default function UserSignUpPage() {
-  return <UserRegisterComposite />;
+  redirect("/sign-up");
 }

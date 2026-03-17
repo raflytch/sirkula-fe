@@ -1,5 +1,5 @@
-import UserLoginComposite from "@/composites/auth/user-login";
+import { redirect } from "next/navigation";
 
 export default function UserLoginPage() {
-  return <UserLoginComposite />;
+  redirect("/auth");
 }

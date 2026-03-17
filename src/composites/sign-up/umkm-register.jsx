@@ -70,31 +70,37 @@ export default function UmkmRegisterComposite() {
 
   return (
     <AuthLayout>
-      <div className="px-4">
-        <Card className="w-full max-w-[420px] mx-auto border shadow-none overflow-hidden relative box-border">
+      <div className="w-full max-w-md px-4">
+        <Card className="w-full border border-gray-100 rounded-2xl overflow-hidden relative">
           <BorderBeam size={250} duration={12} delay={9} />
-          <CardHeader className="text-center p-4 sm:p-6 pb-3 sm:pb-4">
+          <CardHeader className="text-center pb-2 pt-8 px-6 sm:px-8">
             <Link
               href="/sign-up"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3 sm:mb-4 w-fit"
+              className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-5 w-fit transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Kembali
             </Link>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Store className="w-6 h-6 text-green-600" />
-              <CardTitle className="text-2xl font-bold">Daftar UMKM</CardTitle>
+            <div className="flex items-center justify-center gap-2.5 mb-1">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100">
+                <Store className="w-5 h-5 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Daftar UMKM
+              </CardTitle>
             </div>
-            <CardDescription>
-              {step === 1 ? "Informasi Akun" : "Informasi Bisnis"} - Step {step}{" "}
-              of 2
+            <CardDescription className="text-base mt-1">
+              {step === 1 ? "Informasi Akun" : "Informasi Bisnis"} — Langkah{" "}
+              {step} dari 2
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
+          <CardContent className="px-6 sm:px-8 pb-8">
             {step === 1 ? (
-              <form onSubmit={handleNext} className="space-y-4">
+              <form onSubmit={handleNext} className="space-y-4 mt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nama Pemilik</Label>
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Nama Pemilik
+                  </Label>
                   <Input
                     id="name"
                     name="name"
@@ -103,11 +109,13 @@ export default function UmkmRegisterComposite() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="border"
+                    className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Bisnis</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email Bisnis
+                  </Label>
                   <Input
                     id="email"
                     name="email"
@@ -116,11 +124,13 @@ export default function UmkmRegisterComposite() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="border"
+                    className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -130,23 +140,25 @@ export default function UmkmRegisterComposite() {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="border pr-10"
+                      className="h-11 border border-gray-200 rounded-xl px-4 pr-11 focus:border-green-400 focus:ring-green-400/20"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="w-4.5 h-4.5" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4.5 h-4.5" />
                       )}
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                    Konfirmasi Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -156,35 +168,37 @@ export default function UmkmRegisterComposite() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      className="border pr-10"
+                      className="h-11 border border-gray-200 rounded-xl px-4 pr-11 focus:border-green-400 focus:ring-green-400/20"
                     />
                     <button
                       type="button"
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="w-4.5 h-4.5" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4.5 h-4.5" />
                       )}
                     </button>
                   </div>
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full h-11 rounded-xl text-base font-semibold bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white border-0 transition-all duration-200"
                 >
-                  Lanjut ke Step 2
+                  Lanjut ke Langkah 2
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </form>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4 mt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="umkmName">Nama Bisnis/Usaha</Label>
+                  <Label htmlFor="umkmName" className="text-sm font-medium">
+                    Nama Bisnis/Usaha
+                  </Label>
                   <Input
                     id="umkmName"
                     name="umkmName"
@@ -193,16 +207,18 @@ export default function UmkmRegisterComposite() {
                     value={formData.umkmName}
                     onChange={handleChange}
                     required
-                    className="border"
+                    className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="umkmCategory">Kategori Usaha</Label>
+                  <Label htmlFor="umkmCategory" className="text-sm font-medium">
+                    Kategori Usaha
+                  </Label>
                   <Select
                     value={formData.umkmCategory}
                     onValueChange={handleSelectChange}
                   >
-                    <SelectTrigger className="border w-full">
+                    <SelectTrigger className="h-11 border border-gray-200 rounded-xl px-4 w-full">
                       <SelectValue placeholder="Pilih kategori usaha" />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,7 +255,9 @@ export default function UmkmRegisterComposite() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="umkmDescription">Deskripsi Usaha</Label>
+                  <Label htmlFor="umkmDescription" className="text-sm font-medium">
+                    Deskripsi Usaha
+                  </Label>
                   <Input
                     id="umkmDescription"
                     name="umkmDescription"
@@ -248,11 +266,13 @@ export default function UmkmRegisterComposite() {
                     value={formData.umkmDescription}
                     onChange={handleChange}
                     required
-                    className="border"
+                    className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="umkmAddress">Alamat Usaha</Label>
+                  <Label htmlFor="umkmAddress" className="text-sm font-medium">
+                    Alamat Usaha
+                  </Label>
                   <Input
                     id="umkmAddress"
                     name="umkmAddress"
@@ -261,21 +281,21 @@ export default function UmkmRegisterComposite() {
                     value={formData.umkmAddress}
                     onChange={handleChange}
                     required
-                    className="border"
+                    className="h-11 border border-gray-200 rounded-xl px-4 focus:border-green-400 focus:ring-green-400/20"
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 pt-1">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="flex-1"
+                    className="flex-1 h-11 rounded-xl border border-gray-200 font-medium hover:bg-gray-50 transition-colors"
                   >
                     Kembali
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 h-11 rounded-xl text-base font-semibold bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white border-0 transition-all duration-200"
                     disabled={isPending}
                   >
                     {isPending ? "Memproses..." : "Daftar UMKM"}
@@ -284,12 +304,12 @@ export default function UmkmRegisterComposite() {
               </form>
             )}
 
-            <div className="pt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-500">
                 Sudah punya akun UMKM?{" "}
                 <Link
                   href="/auth/umkm"
-                  className="text-green-600 hover:underline font-medium"
+                  className="text-green-600 hover:text-green-700 font-semibold transition-colors"
                 >
                   Masuk di sini
                 </Link>
