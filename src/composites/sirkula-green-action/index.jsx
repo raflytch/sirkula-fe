@@ -537,7 +537,7 @@ export default function SirkulaGreenActionComposite() {
                   <Label htmlFor="media" className="text-sm font-medium">
                     Upload Media (Gambar/Video) *{" "}
                     <span className="text-xs text-muted-foreground">
-                      (Maks. 10MB gambar, 100MB video)
+                      (Maks. 1MB)
                     </span>
                   </Label>
                   <Input
