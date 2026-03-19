@@ -117,6 +117,35 @@ export const useGetAllGreenActions = (params = {}) => {
   });
 };
 
+export const useGetDistricts = () => {
+  return useQuery({
+    queryKey: ["green-action-districts"],
+    queryFn: greenActionService.getDistricts,
+  });
+};
+
+export const useDownloadReportPdf = () => {
+  return useMutation({
+    mutationFn: (district) => greenActionService.downloadReportPdf(district),
+    onSuccess: (blob, district) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `laporan-${district}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Laporan berhasil diunduh!");
+    },
+    onError: (error) => {
+      toast.error("Gagal mengunduh laporan", {
+        description: error.response?.data?.message || error.message,
+      });
+    },
+  });
+};
+
 const IMPACT_CACHE_KEY = "green-action-impact-cache";
 const IMPACT_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
