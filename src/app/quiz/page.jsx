@@ -31,7 +31,14 @@ import {
   useQuizHistory,
 } from "@/hooks/use-quiz";
 import FullscreenLoader from "@/components/ui/fullscreen-loader";
-import { Sparkles, CheckCircle2 } from "lucide-react";
+import {
+  Sparkles,
+  CheckCircle2,
+  Trophy,
+  Star,
+  Clock,
+  ChevronRight,
+} from "lucide-react";
 
 export default function QuizPage() {
   const router = useRouter();
@@ -172,6 +179,41 @@ export default function QuizPage() {
     });
   };
 
+  // Helper: warna grade berdasarkan skor
+  const getScoreGrade = (score) => {
+    if (score >= 80)
+      return {
+        label: "Hebat!",
+        color: "text-emerald-600",
+        bg: "bg-emerald-50",
+        border: "border-emerald-200",
+        ring: "bg-emerald-500",
+      };
+    if (score >= 60)
+      return {
+        label: "Bagus",
+        color: "text-blue-600",
+        bg: "bg-blue-50",
+        border: "border-blue-200",
+        ring: "bg-blue-500",
+      };
+    if (score >= 40)
+      return {
+        label: "Cukup",
+        color: "text-amber-600",
+        bg: "bg-amber-50",
+        border: "border-amber-200",
+        ring: "bg-amber-500",
+      };
+    return {
+      label: "Coba lagi",
+      color: "text-zinc-500",
+      bg: "bg-zinc-50",
+      border: "border-zinc-200",
+      ring: "bg-zinc-400",
+    };
+  };
+
   return (
     <div className="min-h-[60vh] py-10">
       <div className="container max-w-xl mx-auto px-4">
@@ -202,33 +244,129 @@ export default function QuizPage() {
           </Card>
         )}
 
+        {/* ── RIWAYAT QUIZ – UI BARU ── */}
         {quiz.status === "idle" && quizHistory.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-base font-semibold text-zinc-800 mb-3">
-              Riwayat Quiz
-            </h2>
-            <div className="space-y-3">
-              {quizHistory.map((item) => (
-                <Card
-                  key={item.id}
-                  className="border shadow-none bg-white text-sm"
-                >
-                  <CardContent className="py-3 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="font-medium text-zinc-800">
-                        Skor: {item.score} / {totalScrore}
-                      </p>
-                      <p className="text-xs text-zinc-500">
-                        Jawaban benar: {item.correctAnswers} • Poin:{" "}
-                        {item.points}
-                      </p>
+          <div className="mt-8">
+            {/* Header seksi */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-green-100">
+                <Trophy className="w-4 h-4 text-green-700" />
+              </div>
+              <h2 className="text-sm font-semibold tracking-wide text-zinc-700 uppercase">
+                Riwayat Quiz
+              </h2>
+              <span className="ml-auto text-xs font-medium text-zinc-400 bg-zinc-100 rounded-full px-2.5 py-0.5">
+                {quizHistory.length} sesi
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {quizHistory.map((item, idx) => {
+                const grade = getScoreGrade(item.score);
+                const pct = Math.round((item.score / totalScrore) * 100);
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`relative rounded-2xl border bg-white overflow-hidden transition-shadow hover:shadow-sm ${grade.border}`}
+                  >
+                    <div
+                      className={`absolute left-0 top-0 bottom-0 w-1 ${grade.ring} rounded-l-2xl`}
+                    />
+
+                    <div className="flex items-center gap-4 px-4 py-3.5 pl-5">
+                      <span className="text-xs font-semibold text-zinc-400 w-4 shrink-0 text-center">
+                        #{idx + 1}
+                      </span>
+
+                      <div className="relative shrink-0">
+                        <svg
+                          width="44"
+                          height="44"
+                          viewBox="0 0 44 44"
+                          className="-rotate-90"
+                        >
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="17"
+                            fill="none"
+                            stroke="#f4f4f5"
+                            strokeWidth="4"
+                          />
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="17"
+                            fill="none"
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            stroke={
+                              pct >= 80
+                                ? "#10b981"
+                                : pct >= 60
+                                  ? "#3b82f6"
+                                  : pct >= 40
+                                    ? "#f59e0b"
+                                    : "#a1a1aa"
+                            }
+                            strokeDasharray={`${(pct / 100) * 106.8} 106.8`}
+                          />
+                        </svg>
+                        <span
+                          className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${grade.color}`}
+                        >
+                          {pct}%
+                        </span>
+                      </div>
+
+                      {/* Info utama */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className="text-base font-bold text-zinc-800">
+                            {item.score}
+                            <span className="text-xs font-normal text-zinc-400">
+                              {" "}
+                              / {totalScrore}
+                            </span>
+                          </span>
+                          <span
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${grade.bg} ${grade.color}`}
+                          >
+                            {grade.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-zinc-500">
+                          <span className="flex items-center gap-1">
+                            <Star className="w-3 h-3 text-amber-400" />
+                            {item.correctAnswers} benar
+                          </span>
+                          <span className="text-zinc-300">·</span>
+                          <span className="flex items-center gap-1">
+                            <ChevronRight className="w-3 h-3 text-green-500" />
+                            {item.points} poin
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <div className="flex items-center gap-1 text-xs text-zinc-400 justify-end">
+                          <Clock className="w-3 h-3" />
+                          <span className="hidden sm:inline">
+                            {formatHistoryDate(item.createdAt)}
+                          </span>
+                          <span className="sm:hidden">
+                            {new Date(item.createdAt).toLocaleDateString(
+                              "id-ID",
+                              { day: "numeric", month: "short" },
+                            )}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-xs text-zinc-500 text-right whitespace-nowrap">
-                      {formatHistoryDate(item.createdAt)}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
