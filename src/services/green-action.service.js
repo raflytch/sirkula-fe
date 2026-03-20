@@ -64,4 +64,12 @@ export const greenActionService = {
     });
     return response.data;
   },
+
+  downloadReportExcel: async (district) => {
+    const response = await httpClient.get("/green-actions/reports/excel", {
+      params: { district },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };

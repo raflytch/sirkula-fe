@@ -1,18 +1,23 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  status: "idle", // "in_progress" | "completed"
+  status: "idle",
   currentQuestionIndex: 0,
   answers: {},
+  doubts: {},
   questions: [],
   quizId: null,
   material: null,
+  result: null,
 };
 
 const quizSlice = createSlice({
   name: "quiz",
   initialState,
   reducers: {
+    hydrateQuiz: (_state, action) => {
+      return { ...initialState, ...action.payload };
+    },
     setQuestions: (state, action) => {
       state.questions = action.payload || [];
     },
@@ -21,43 +26,43 @@ const quizSlice = createSlice({
       state.quizId = quizId || null;
       state.material = material || null;
     },
+    showMaterial: (state) => {
+      state.status = "material";
+    },
     startQuiz: (state) => {
       state.status = "in_progress";
       state.currentQuestionIndex = 0;
       state.answers = {};
+      state.doubts = {};
     },
     answerQuestion: (state, action) => {
-      const { questionId, answer } = action.payload;
-      state.answers[questionId] = answer;
+      const { questionNumber, answer } = action.payload;
+      state.answers[questionNumber] = answer;
+    },
+    toggleDoubt: (state, action) => {
+      const questionNumber = action.payload;
+      state.doubts[questionNumber] = !state.doubts[questionNumber];
     },
     setCurrentQuestionIndex: (state, action) => {
       state.currentQuestionIndex = action.payload;
     },
-    nextQuestion: (state) => {
-      if (state.currentQuestionIndex < state.questions.length - 1) {
-        state.currentQuestionIndex += 1;
-      }
-    },
-    prevQuestion: (state) => {
-      if (state.currentQuestionIndex > 0) {
-        state.currentQuestionIndex -= 1;
-      }
-    },
-    finishQuiz: (state) => {
+    finishQuiz: (state, action) => {
       state.status = "completed";
+      state.result = action.payload || null;
     },
     resetQuiz: () => initialState,
   },
 });
 
 export const {
+  hydrateQuiz,
   setQuestions,
   setQuizMeta,
+  showMaterial,
   startQuiz,
   answerQuestion,
+  toggleDoubt,
   setCurrentQuestionIndex,
-  nextQuestion,
-  prevQuestion,
   finishQuiz,
   resetQuiz,
 } = quizSlice.actions;

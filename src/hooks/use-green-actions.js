@@ -146,6 +146,28 @@ export const useDownloadReportPdf = () => {
   });
 };
 
+export const useDownloadReportExcel = () => {
+  return useMutation({
+    mutationFn: (district) => greenActionService.downloadReportExcel(district),
+    onSuccess: (blob, district) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `laporan-${district}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Laporan Excel berhasil diunduh!");
+    },
+    onError: (error) => {
+      toast.error("Gagal mengunduh laporan Excel", {
+        description: error.response?.data?.message || error.message,
+      });
+    },
+  });
+};
+
 const IMPACT_CACHE_KEY = "green-action-impact-cache";
 const IMPACT_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
