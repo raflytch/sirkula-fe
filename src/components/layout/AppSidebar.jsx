@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -86,6 +87,11 @@ export function AppSidebar() {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const { data: session, isLoading } = useSession();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -188,7 +194,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {isLoading ? (
+              {!mounted || isLoading ? (
                 <>
                   <SidebarMenuItem>
                     <SidebarMenuSkeleton showIcon />
@@ -229,7 +235,7 @@ export function AppSidebar() {
         className="border-t px-2 sm:px-3 py-2"
         suppressHydrationWarning
       >
-        {isLoading ? (
+        {!mounted || isLoading ? (
           <div className="p-2">
             <SidebarMenuSkeleton showIcon />
           </div>

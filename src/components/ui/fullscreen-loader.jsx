@@ -1,7 +1,9 @@
 "use client";
 
-import Lottie from "lottie-react";
+import dynamic from "next/dynamic";
 import loadingAnimation from "../../../public/animations/loading.json";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export default function FullscreenLoader({ text }) {
   return (

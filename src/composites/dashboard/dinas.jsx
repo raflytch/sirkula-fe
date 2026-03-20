@@ -3,16 +3,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/use-auth";
-import { useGetAllGreenActions } from "@/hooks/use-green-actions";
+import {
+  useGetAllGreenActions,
+  useGetDistricts,
+  useDownloadReportPdf,
+} from "@/hooks/use-green-actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,15 +27,50 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
   MapPin,
   Calendar,
   Eye,
-  Video,
   Filter,
   Search,
   X,
   Building2,
   MapPinned,
+  FileDown,
+  Loader2,
+  BarChart3,
+  TrendingUp,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Leaf,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -52,25 +84,67 @@ const ActionsMap = dynamic(() => import("./actions-map"), {
   loading: () => <Skeleton className="h-[400px] w-full rounded-lg" />,
 });
 
+const STATUS_COLORS = {
+  VERIFIED: "#22c55e",
+  REJECTED: "#ef4444",
+  PENDING: "#eab308",
+  NEEDS_IMPROVEMENT: "#f97316",
+};
+
+const CATEGORY_LABELS = {
+  PILAH_SAMPAH: "Pilah Sampah",
+  TANAM_POHON: "Tanam Pohon",
+  KONSUMSI_HIJAU: "Konsumsi Hijau",
+  AKSI_KOLEKTIF: "Aksi Kolektif",
+};
+
+const CATEGORY_COLORS = {
+  PILAH_SAMPAH: "#22c55e",
+  TANAM_POHON: "#16a34a",
+  KONSUMSI_HIJAU: "#4ade80",
+  AKSI_KOLEKTIF: "#86efac",
+};
+
+const statusChartConfig = {
+  verified: { label: "Terverifikasi", color: "#22c55e" },
+  rejected: { label: "Ditolak", color: "#ef4444" },
+  pending: { label: "Pending", color: "#eab308" },
+  needsImprovement: { label: "Perlu Perbaikan", color: "#f97316" },
+};
+
+const categoryChartConfig = {
+  PILAH_SAMPAH: { label: "Pilah Sampah", color: "#22c55e" },
+  TANAM_POHON: { label: "Tanam Pohon", color: "#16a34a" },
+  KONSUMSI_HIJAU: { label: "Konsumsi Hijau", color: "#4ade80" },
+  AKSI_KOLEKTIF: { label: "Aksi Kolektif", color: "#86efac" },
+};
+
+const districtChartConfig = {
+  total: { label: "Total Aksi", color: "#22c55e" },
+};
+
 export default function DinasDashboardComposite() {
   const router = useRouter();
   const { data: session, isLoading: sessionLoading } = useSession();
   const [selectedAction, setSelectedAction] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-  // Filter states
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
 
-  // Debounced filter values
   const debouncedSearch = useDebounce(searchQuery, 500);
   const debouncedDistrict = useDebounce(districtFilter, 500);
   const debouncedCity = useDebounce(cityFilter, 500);
 
-  // Build query params
   const queryParams = useMemo(() => {
     const params = {};
     if (searchQuery) params.search = searchQuery;
@@ -83,10 +157,13 @@ export default function DinasDashboardComposite() {
 
   const { data: greenActionsData, isLoading: actionsLoading } =
     useGetAllGreenActions(queryParams);
+  const { data: districtsData, isLoading: districtsLoading } =
+    useGetDistricts();
+  const downloadPdf = useDownloadReportPdf();
 
-  // Prepare data before early returns
   const greenActions = greenActionsData?.data || [];
-  const filteredActions = greenActions; // Already filtered by backend
+  const filteredActions = greenActions;
+  const districts = districtsData?.data || [];
 
   const stats = useMemo(() => {
     return {
@@ -94,13 +171,53 @@ export default function DinasDashboardComposite() {
       verified: greenActions.filter((a) => a.status === "VERIFIED").length,
       rejected: greenActions.filter((a) => a.status === "REJECTED").length,
       pending: greenActions.filter((a) => a.status === "PENDING").length,
+      needsImprovement: greenActions.filter(
+        (a) => a.status === "NEEDS_IMPROVEMENT",
+      ).length,
     };
   }, [greenActions]);
 
-  // Hitung center map dari rata-rata koordinat yang ada
+  const statusChartData = useMemo(
+    () => [
+      { name: "Terverifikasi", value: stats.verified, fill: "#22c55e" },
+      { name: "Ditolak", value: stats.rejected, fill: "#ef4444" },
+      { name: "Pending", value: stats.pending, fill: "#eab308" },
+      {
+        name: "Perlu Perbaikan",
+        value: stats.needsImprovement,
+        fill: "#f97316",
+      },
+    ],
+    [stats],
+  );
+
+  const categoryChartData = useMemo(() => {
+    const counts = {};
+    greenActions.forEach((a) => {
+      counts[a.category] = (counts[a.category] || 0) + 1;
+    });
+    return Object.entries(counts).map(([key, value]) => ({
+      name: CATEGORY_LABELS[key] || key,
+      total: value,
+      fill: CATEGORY_COLORS[key] || "#22c55e",
+    }));
+  }, [greenActions]);
+
+  const districtChartData = useMemo(() => {
+    const counts = {};
+    greenActions.forEach((a) => {
+      const key = a.district || "Tidak diketahui";
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+  }, [greenActions]);
+
   const mapCenter = useMemo(() => {
     if (filteredActions.length === 0) {
-      return { lat: -6.2088, lng: 106.8456 }; // Default Jakarta
+      return { lat: -6.2088, lng: 106.8456 };
     }
     const avgLat =
       filteredActions.reduce((sum, action) => sum + action.latitude, 0) /
@@ -140,16 +257,6 @@ export default function DinasDashboardComposite() {
     }
   };
 
-  const getCategoryLabel = (category) => {
-    const labels = {
-      PILAH_SAMPAH: "Pilah Sampah",
-      TANAM_POHON: "Tanam Pohon",
-      KONSUMSI_HIJAU: "Konsumsi Hijau",
-      AKSI_KOLEKTIF: "Aksi Kolektif",
-    };
-    return labels[category] || category;
-  };
-
   const handleViewDetail = (action) => {
     setSelectedAction(action);
     setDetailDialogOpen(true);
@@ -163,6 +270,12 @@ export default function DinasDashboardComposite() {
     setCityFilter("");
   };
 
+  const handleDownloadPdf = () => {
+    if (selectedDistrict) {
+      downloadPdf.mutate(selectedDistrict);
+    }
+  };
+
   const hasActiveFilters =
     searchQuery ||
     statusFilter ||
@@ -170,7 +283,7 @@ export default function DinasDashboardComposite() {
     districtFilter ||
     cityFilter;
 
-  if (sessionLoading) {
+  if (!mounted || sessionLoading) {
     return <FullscreenLoader />;
   }
 
@@ -179,87 +292,300 @@ export default function DinasDashboardComposite() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-[1400px] mx-auto">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-700">
-          Dashboard Dinas Lingkungan Hidup
-        </h1>
-        <p className="text-sm sm:text-base text-zinc-600">
-          Monitoring laporan green action wilayah
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card>
-          <CardHeader className="pb-2 sm:pb-3">
-            <CardDescription className="text-xs sm:text-sm">
-              Total Laporan
-            </CardDescription>
-            <CardTitle className="text-2xl sm:text-3xl">
-              {stats.total}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 sm:pb-3">
-            <CardDescription className="text-xs sm:text-sm">
-              Terverifikasi
-            </CardDescription>
-            <CardTitle className="text-2xl sm:text-3xl text-green-600">
-              {stats.verified}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 sm:pb-3">
-            <CardDescription className="text-xs sm:text-sm">
-              Ditolak
-            </CardDescription>
-            <CardTitle className="text-2xl sm:text-3xl text-red-600">
-              {stats.rejected}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 sm:pb-3">
-            <CardDescription className="text-xs sm:text-sm">
-              Pending
-            </CardDescription>
-            <CardTitle className="text-2xl sm:text-3xl text-yellow-600">
-              {stats.pending}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Filter className="h-5 w-5" />
-              Filter Laporan
-            </CardTitle>
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="text-xs sm:text-sm"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear
-              </Button>
-            )}
+      <div className="rounded-2xl bg-linear-to-r from-green-50 to-emerald-50 border border-green-100 p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Leaf className="h-6 w-6 text-green-600" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-green-800">
+                Dashboard Monitoring
+              </h1>
+            </div>
+            <p className="text-sm sm:text-base text-green-600/80">
+              Dinas Lingkungan Hidup &mdash; Monitoring Green Action
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-            {/* Search */}
-            <div className="space-y-2 sm:col-span-2 lg:col-span-3 xl:col-span-1">
-              <Label htmlFor="search" className="text-xs sm:text-sm">
+          <div className="flex items-center gap-3 text-sm text-green-700/70">
+            <BarChart3 className="h-4 w-4" />
+            <span>{stats.total} total laporan</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Overview Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-green-100 bg-linear-to-br from-green-50/50 to-white p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-green-100 p-2">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Total Laporan</p>
+              <p className="text-xl sm:text-2xl font-bold text-zinc-800">
+                {stats.total}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-green-100 bg-linear-to-br from-green-50/50 to-white p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-green-100 p-2">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Terverifikasi</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
+                {stats.verified}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-red-100 bg-linear-to-br from-red-50/30 to-white p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-red-100 p-2">
+              <XCircle className="h-4 w-4 text-red-500" />
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Ditolak</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-500">
+                {stats.rejected}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-yellow-100 bg-linear-to-br from-yellow-50/30 to-white p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-yellow-100 p-2">
+              <Clock className="h-4 w-4 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500">Pending</p>
+              <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+                {stats.pending}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Status Distribution Pie Chart */}
+        <div className="rounded-xl border border-zinc-200/60 bg-white p-5 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-zinc-800 mb-1">
+            Distribusi Status
+          </h3>
+          <p className="text-xs text-zinc-500 mb-4">
+            Persentase status laporan green action
+          </p>
+          {actionsLoading ? (
+            <Skeleton className="h-[250px] w-full rounded-lg" />
+          ) : stats.total === 0 ? (
+            <div className="h-[250px] flex items-center justify-center text-sm text-zinc-400">
+              Belum ada data
+            </div>
+          ) : (
+            <ChartContainer
+              config={statusChartConfig}
+              className="h-[250px] w-full"
+            >
+              <PieChart>
+                <Pie
+                  data={statusChartData.filter((d) => d.value > 0)}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={90}
+                  strokeWidth={2}
+                  stroke="#fff"
+                >
+                  {statusChartData
+                    .filter((d) => d.value > 0)
+                    .map((entry, index) => (
+                      <Cell key={index} fill={entry.fill} />
+                    ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            </ChartContainer>
+          )}
+        </div>
+
+        {/* Category Bar Chart */}
+        <div className="rounded-xl border border-zinc-200/60 bg-white p-5 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-zinc-800 mb-1">
+            Aksi per Kategori
+          </h3>
+          <p className="text-xs text-zinc-500 mb-4">
+            Jumlah green action berdasarkan kategori
+          </p>
+          {actionsLoading ? (
+            <Skeleton className="h-[250px] w-full rounded-lg" />
+          ) : categoryChartData.length === 0 ? (
+            <div className="h-[250px] flex items-center justify-center text-sm text-zinc-400">
+              Belum ada data
+            </div>
+          ) : (
+            <ChartContainer
+              config={categoryChartConfig}
+              className="h-[250px] w-full"
+            >
+              <BarChart data={categoryChartData} layout="vertical">
+                <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+                <XAxis type="number" allowDecimals={false} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={100}
+                  tick={{ fontSize: 12 }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="total" radius={[0, 6, 6, 0]}>
+                  {categoryChartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          )}
+        </div>
+      </div>
+
+      {/* District Distribution Chart */}
+      <div className="rounded-xl border border-zinc-200/60 bg-white p-5 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-zinc-800 mb-1">
+          Top 10 Kelurahan
+        </h3>
+        <p className="text-xs text-zinc-500 mb-4">
+          Kelurahan dengan jumlah green action terbanyak
+        </p>
+        {actionsLoading ? (
+          <Skeleton className="h-[300px] w-full rounded-lg" />
+        ) : districtChartData.length === 0 ? (
+          <div className="h-[300px] flex items-center justify-center text-sm text-zinc-400">
+            Belum ada data
+          </div>
+        ) : (
+          <ChartContainer
+            config={districtChartConfig}
+            className="h-[300px] w-full"
+          >
+            <BarChart data={districtChartData}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 11 }}
+                angle={-30}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="total" fill="#22c55e" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
+        )}
+      </div>
+
+      {/* PDF Report Generation */}
+      <div className="rounded-xl border border-green-200/60 bg-linear-to-r from-green-50/60 to-emerald-50/60 p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center gap-2">
+              <FileDown className="h-5 w-5 text-green-600" />
+              <h3 className="text-base sm:text-lg font-semibold text-zinc-800">
+                Generate Laporan PDF
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-500">
+              Pilih kelurahan untuk mengunduh laporan green action dalam format
+              PDF
+            </p>
+            <div className="max-w-sm space-y-1.5">
+              <Label htmlFor="pdf-district" className="text-xs text-zinc-600">
+                Kelurahan
+              </Label>
+              <Select
+                value={selectedDistrict}
+                onValueChange={setSelectedDistrict}
+              >
+                <SelectTrigger id="pdf-district" className="text-sm bg-white">
+                  <SelectValue placeholder="Pilih kelurahan..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {districtsLoading ? (
+                    <SelectItem value="_loading" disabled>
+                      Memuat data...
+                    </SelectItem>
+                  ) : districts.length === 0 ? (
+                    <SelectItem value="_empty" disabled>
+                      Tidak ada kelurahan
+                    </SelectItem>
+                  ) : (
+                    districts.map((d) => (
+                      <SelectItem key={d.district} value={d.district}>
+                        {d.district} — {d.city}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <Button
+            onClick={handleDownloadPdf}
+            disabled={!selectedDistrict || downloadPdf.isPending}
+            className="bg-green-600 hover:bg-green-700 text-white gap-2"
+          >
+            {downloadPdf.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4" />
+            )}
+            {downloadPdf.isPending ? "Mengunduh..." : "Unduh Laporan"}
+          </Button>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Filters & Data Section */}
+      <Tabs defaultValue="map" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="map">Peta</TabsTrigger>
+            <TabsTrigger value="table">Tabel</TabsTrigger>
+          </TabsList>
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs text-zinc-500"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Hapus filter
+            </Button>
+          )}
+        </div>
+
+        {/* Filters */}
+        <div className="rounded-xl border border-zinc-200/60 bg-white p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-zinc-500" />
+            <span className="text-sm font-medium text-zinc-700">
+              Filter Data
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            <div className="space-y-1.5 sm:col-span-2 lg:col-span-3 xl:col-span-1">
+              <Label htmlFor="search" className="text-xs text-zinc-500">
                 Cari
               </Label>
               <div className="relative">
@@ -274,16 +600,13 @@ export default function DinasDashboardComposite() {
               </div>
             </div>
 
-            {/* Status Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-xs sm:text-sm">
+            <div className="space-y-1.5">
+              <Label htmlFor="status" className="text-xs text-zinc-500">
                 Status
               </Label>
               <Select
                 value={statusFilter || "all"}
-                onValueChange={(value) =>
-                  setStatusFilter(value === "all" ? "" : value)
-                }
+                onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}
               >
                 <SelectTrigger id="status" className="text-sm w-full">
                   <SelectValue placeholder="Semua Status" />
@@ -300,16 +623,13 @@ export default function DinasDashboardComposite() {
               </Select>
             </div>
 
-            {/* Category Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-xs sm:text-sm">
+            <div className="space-y-1.5">
+              <Label htmlFor="category" className="text-xs text-zinc-500">
                 Kategori
               </Label>
               <Select
                 value={categoryFilter || "all"}
-                onValueChange={(value) =>
-                  setCategoryFilter(value === "all" ? "" : value)
-                }
+                onValueChange={(v) => setCategoryFilter(v === "all" ? "" : v)}
               >
                 <SelectTrigger id="category" className="text-sm w-full">
                   <SelectValue placeholder="Semua Kategori" />
@@ -324,11 +644,10 @@ export default function DinasDashboardComposite() {
               </Select>
             </div>
 
-            {/* District Filter */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label
                 htmlFor="district"
-                className="text-xs sm:text-sm flex items-center gap-1"
+                className="text-xs text-zinc-500 flex items-center gap-1"
               >
                 <MapPinned className="h-3 w-3" />
                 Kelurahan
@@ -342,11 +661,10 @@ export default function DinasDashboardComposite() {
               />
             </div>
 
-            {/* City Filter */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label
                 htmlFor="city"
-                className="text-xs sm:text-sm flex items-center gap-1"
+                className="text-xs text-zinc-500 flex items-center gap-1"
               >
                 <Building2 className="h-3 w-3" />
                 Kota
@@ -362,208 +680,203 @@ export default function DinasDashboardComposite() {
           </div>
 
           {hasActiveFilters && (
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex flex-wrap gap-2">
-                <span className="text-xs sm:text-sm text-zinc-600">
-                  Filter aktif:
-                </span>
-                {searchQuery && (
-                  <Badge variant="secondary" className="text-xs">
-                    Cari: {searchQuery}
-                    <X
-                      className="h-3 w-3 ml-1 cursor-pointer"
-                      onClick={() => setSearchQuery("")}
-                    />
-                  </Badge>
-                )}
-                {statusFilter && (
-                  <Badge variant="secondary" className="text-xs">
-                    Status: {statusFilter}
-                    <X
-                      className="h-3 w-3 ml-1 cursor-pointer"
-                      onClick={() => setStatusFilter("")}
-                    />
-                  </Badge>
-                )}
-                {categoryFilter && (
-                  <Badge variant="secondary" className="text-xs">
-                    Kategori: {categoryFilter}
-                    <X
-                      className="h-3 w-3 ml-1 cursor-pointer"
-                      onClick={() => setCategoryFilter("")}
-                    />
-                  </Badge>
-                )}
-                {districtFilter && (
-                  <Badge variant="secondary" className="text-xs">
-                    Kelurahan: {districtFilter}
-                    <X
-                      className="h-3 w-3 ml-1 cursor-pointer"
-                      onClick={() => setDistrictFilter("")}
-                    />
-                  </Badge>
-                )}
-                {cityFilter && (
-                  <Badge variant="secondary" className="text-xs">
-                    Kota: {cityFilter}
-                    <X
-                      className="h-3 w-3 ml-1 cursor-pointer"
-                      onClick={() => setCityFilter("")}
-                    />
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Map */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">
-            Peta Lokasi Laporan
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Visualisasi lokasi green action di wilayah
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {actionsLoading ? (
-            <Skeleton className="h-[300px] sm:h-[400px] w-full rounded-lg" />
-          ) : (
-            <ActionsMap
-              actions={filteredActions}
-              initialPosition={mapCenter}
-              onMarkerClick={handleViewDetail}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Actions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Daftar Laporan</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            {filteredActions.length} laporan ditemukan
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {actionsLoading ? (
-            <div className="space-y-3 sm:space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="flex gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg"
+            <div className="mt-3 pt-3 border-t flex flex-wrap gap-1.5">
+              {searchQuery && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs gap-1 cursor-pointer"
+                  onClick={() => setSearchQuery("")}
                 >
-                  <Skeleton className="h-14 w-14 sm:h-16 sm:w-16 rounded shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-3 w-1/2" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filteredActions.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500">
-              <MapPin className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm sm:text-base">
-                {hasActiveFilters
-                  ? "Tidak ada laporan yang sesuai dengan filter"
-                  : "Tidak ada laporan ditemukan"}
-              </p>
-              {hasActiveFilters && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="mt-2 text-xs sm:text-sm"
+                  Cari: {searchQuery}
+                  <X className="h-3 w-3" />
+                </Badge>
+              )}
+              {statusFilter && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs gap-1 cursor-pointer"
+                  onClick={() => setStatusFilter("")}
                 >
-                  Clear semua filter
-                </Button>
+                  Status: {statusFilter}
+                  <X className="h-3 w-3" />
+                </Badge>
+              )}
+              {categoryFilter && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs gap-1 cursor-pointer"
+                  onClick={() => setCategoryFilter("")}
+                >
+                  Kategori: {categoryFilter}
+                  <X className="h-3 w-3" />
+                </Badge>
+              )}
+              {districtFilter && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs gap-1 cursor-pointer"
+                  onClick={() => setDistrictFilter("")}
+                >
+                  Kelurahan: {districtFilter}
+                  <X className="h-3 w-3" />
+                </Badge>
+              )}
+              {cityFilter && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs gap-1 cursor-pointer"
+                  onClick={() => setCityFilter("")}
+                >
+                  Kota: {cityFilter}
+                  <X className="h-3 w-3" />
+                </Badge>
               )}
             </div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {filteredActions.map((action) => (
-                <div
-                  key={action.id}
-                  className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-zinc-50 transition-colors"
-                >
-                  <div className="relative h-40 sm:h-16 w-full sm:w-16 rounded overflow-hidden bg-zinc-100 shrink-0">
-                    {action.mediaType === "IMAGE" ? (
-                      <Image
-                        src={action.mediaUrl}
-                        alt="Action"
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <video
-                        src={action.mediaUrl}
-                        className="h-full w-full object-cover"
-                        muted
-                        playsInline
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm sm:text-base text-zinc-900 truncate">
-                          {getCategoryLabel(action.category)}
-                        </h4>
-                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1 text-xs sm:text-sm text-zinc-600">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          <span className="truncate">
-                            {action.locationName}
-                          </span>
-                          <span className="text-zinc-400 hidden sm:inline">
-                            •
-                          </span>
-                          <span className="truncate">
-                            {action.district}, {action.city}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1 sm:gap-2 mt-1 text-xs text-zinc-500">
-                          <Calendar className="h-3 w-3 shrink-0" />
-                          <span>{formatDate(action.createdAt)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                        <Badge
-                          className={cn(
-                            "text-xs whitespace-nowrap",
-                            getStatusBadgeColor(action.status)
-                          )}
-                        >
-                          {action.status}
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleViewDetail(action)}
-                          className="text-xs"
-                        >
-                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-0" />
-                          <span className="sm:hidden ml-1">Detail</span>
-                        </Button>
-                      </div>
-                    </div>
-                    {action.description && (
-                      <p className="text-xs sm:text-sm text-zinc-600 mt-2 line-clamp-2">
-                        {action.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Map Tab */}
+        <TabsContent value="map">
+          <div className="rounded-xl border border-zinc-200/60 bg-white p-4 sm:p-5">
+            <div className="mb-3">
+              <h3 className="text-base font-semibold text-zinc-800">
+                Peta Lokasi Laporan
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Visualisasi lokasi green action di wilayah
+              </p>
+            </div>
+            {actionsLoading ? (
+              <Skeleton className="h-[350px] sm:h-[450px] w-full rounded-lg" />
+            ) : (
+              <ActionsMap
+                actions={filteredActions}
+                initialPosition={mapCenter}
+                onMarkerClick={handleViewDetail}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Table Tab */}
+        <TabsContent value="table">
+          <div className="rounded-xl border border-zinc-200/60 bg-white overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-zinc-100">
+              <h3 className="text-base font-semibold text-zinc-800">
+                Daftar Laporan
+              </h3>
+              <p className="text-xs text-zinc-500">
+                {filteredActions.length} laporan ditemukan
+              </p>
+            </div>
+            {actionsLoading ? (
+              <div className="p-4 space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-3 p-3 border rounded-lg">
+                    <Skeleton className="h-12 w-12 rounded shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredActions.length === 0 ? (
+              <div className="text-center py-16 text-zinc-400">
+                <MapPin className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p className="text-sm">
+                  {hasActiveFilters
+                    ? "Tidak ada laporan sesuai filter"
+                    : "Belum ada laporan"}
+                </p>
+                {hasActiveFilters && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="mt-1 text-xs"
+                  >
+                    Hapus semua filter
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-zinc-50/80">
+                      <TableHead className="text-xs">Media</TableHead>
+                      <TableHead className="text-xs">Kategori</TableHead>
+                      <TableHead className="text-xs">Lokasi</TableHead>
+                      <TableHead className="text-xs">Kelurahan</TableHead>
+                      <TableHead className="text-xs">Status</TableHead>
+                      <TableHead className="text-xs">Tanggal</TableHead>
+                      <TableHead className="text-xs w-[60px]" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredActions.map((action) => (
+                      <TableRow key={action.id} className="hover:bg-zinc-50/50">
+                        <TableCell className="py-2">
+                          <div className="relative h-10 w-10 rounded overflow-hidden bg-zinc-100 shrink-0">
+                            {action.mediaType === "IMAGE" ? (
+                              <Image
+                                src={action.mediaUrl}
+                                alt="Action"
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <video
+                                src={action.mediaUrl}
+                                className="h-full w-full object-cover"
+                                muted
+                                playsInline
+                              />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs font-medium">
+                          {CATEGORY_LABELS[action.category] || action.category}
+                        </TableCell>
+                        <TableCell className="text-xs text-zinc-600 max-w-[150px] truncate">
+                          {action.locationName}
+                        </TableCell>
+                        <TableCell className="text-xs text-zinc-600">
+                          {action.district}, {action.city}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={cn(
+                              "text-[10px] px-1.5 py-0.5",
+                              getStatusBadgeColor(action.status),
+                            )}
+                          >
+                            {action.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-zinc-500">
+                          {formatDate(action.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => handleViewDetail(action)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
@@ -576,7 +889,6 @@ export default function DinasDashboardComposite() {
           </DialogHeader>
           {selectedAction && (
             <div className="space-y-4">
-              {/* Media */}
               <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden bg-zinc-100">
                 {selectedAction.mediaType === "IMAGE" ? (
                   <Image
@@ -594,75 +906,64 @@ export default function DinasDashboardComposite() {
                 )}
               </div>
 
-              {/* Info */}
-              <div className="grid gap-3 sm:gap-4">
+              <div className="grid gap-3">
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-zinc-700">
-                    Kategori
-                  </label>
-                  <p className="text-sm sm:text-base text-zinc-900">
-                    {getCategoryLabel(selectedAction.category)}
+                  <p className="text-xs font-medium text-zinc-500">Kategori</p>
+                  <p className="text-sm text-zinc-900">
+                    {CATEGORY_LABELS[selectedAction.category] ||
+                      selectedAction.category}
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-zinc-700">
-                    Status
-                  </label>
-                  <div className="mt-1">
-                    <Badge
-                      className={cn(
-                        "text-xs",
-                        getStatusBadgeColor(selectedAction.status)
-                      )}
-                    >
-                      {selectedAction.status}
-                    </Badge>
-                  </div>
+                  <p className="text-xs font-medium text-zinc-500">Status</p>
+                  <Badge
+                    className={cn(
+                      "text-xs mt-0.5",
+                      getStatusBadgeColor(selectedAction.status),
+                    )}
+                  >
+                    {selectedAction.status}
+                  </Badge>
                 </div>
 
                 {selectedAction.description && (
                   <div>
-                    <label className="text-xs sm:text-sm font-medium text-zinc-700">
+                    <p className="text-xs font-medium text-zinc-500">
                       Deskripsi
-                    </label>
-                    <p className="text-sm sm:text-base text-zinc-900">
+                    </p>
+                    <p className="text-sm text-zinc-900">
                       {selectedAction.description}
                     </p>
                   </div>
                 )}
 
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-zinc-700">
-                    Lokasi
-                  </label>
-                  <p className="text-sm sm:text-base text-zinc-900">
+                  <p className="text-xs font-medium text-zinc-500">Lokasi</p>
+                  <p className="text-sm text-zinc-900">
                     {selectedAction.locationName}
                   </p>
-                  <p className="text-xs sm:text-sm text-zinc-600">
+                  <p className="text-xs text-zinc-500">
                     {selectedAction.district}, {selectedAction.city}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Koordinat: {selectedAction.latitude},{" "}
-                    {selectedAction.longitude}
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    {selectedAction.latitude}, {selectedAction.longitude}
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-zinc-700">
-                    AI Score
-                  </label>
-                  <p className="text-sm sm:text-base text-zinc-900">
+                  <p className="text-xs font-medium text-zinc-500">AI Score</p>
+                  <p className="text-sm text-zinc-900">
                     {selectedAction.aiScore}
                   </p>
                 </div>
 
                 {selectedAction.aiFeedback && (
                   <div>
-                    <label className="text-xs sm:text-sm font-medium text-zinc-700">
+                    <p className="text-xs font-medium text-zinc-500">
                       AI Feedback
-                    </label>
-                    <p className="text-sm sm:text-base text-zinc-900">
+                    </p>
+                    <p className="text-sm text-zinc-900">
                       {selectedAction.aiFeedback}
                     </p>
                   </div>
@@ -670,20 +971,18 @@ export default function DinasDashboardComposite() {
 
                 {selectedAction.points > 0 && (
                   <div>
-                    <label className="text-xs sm:text-sm font-medium text-zinc-700">
-                      Poin
-                    </label>
-                    <p className="text-sm sm:text-base font-semibold text-green-600">
+                    <p className="text-xs font-medium text-zinc-500">Poin</p>
+                    <p className="text-sm font-semibold text-green-600">
                       {selectedAction.points} poin
                     </p>
                   </div>
                 )}
 
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-zinc-700">
+                  <p className="text-xs font-medium text-zinc-500">
                     Tanggal Dibuat
-                  </label>
-                  <p className="text-sm sm:text-base text-zinc-900">
+                  </p>
+                  <p className="text-sm text-zinc-900">
                     {formatDate(selectedAction.createdAt)}
                   </p>
                 </div>

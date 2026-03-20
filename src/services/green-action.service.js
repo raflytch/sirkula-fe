@@ -51,4 +51,17 @@ export const greenActionService = {
     const response = await httpClient.get("/green-actions/impact");
     return response.data;
   },
+
+  getDistricts: async () => {
+    const response = await httpClient.get("/green-actions/districts");
+    return response.data;
+  },
+
+  downloadReportPdf: async (district) => {
+    const response = await httpClient.get("/green-actions/reports/pdf", {
+      params: { district },
+      responseType: "blob",
+    });
+    return response.data;
+  },
 };
