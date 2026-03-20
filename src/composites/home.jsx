@@ -8,6 +8,8 @@ import HowItWorksSection from "@/components/HowItWorksSection";
 import CTAFooter from "@/components/CTAFooter";
 import HeroSection from "@/components/HeroSection";
 import AboutUsSection from "@/components/AboutUsSection";
+import QuizSection from "@/components/QuizSection";
+import ImpactSection from "@/components/ImpactSection";
 import FAQ from "@/components/FAQ";
 import VideoModal from "@/components/VideoModal";
 import { DEMO_VIDEO_URL } from "@/lib/constanst";
@@ -33,9 +35,15 @@ export default function HomeComposite() {
         <FeaturesSection id="featuresSection" />
       </BlurFade>
       <BlurFade delay={0.35} inView>
-        <FAQ id="faqSection" />
+        <QuizSection id="quizSection" />
       </BlurFade>
       <BlurFade delay={0.4} inView>
+        <ImpactSection id="impactSection" />
+      </BlurFade>
+      <BlurFade delay={0.45} inView>
+        <FAQ id="faqSection" />
+      </BlurFade>
+      <BlurFade delay={0.5} inView>
         <CTAFooter />
       </BlurFade>
 

@@ -483,7 +483,7 @@ export default function QuizComposite() {
                                 {item.correctAnswers}/{item.totalQuestions}{" "}
                                 benar
                               </span>
-                              <span className="text-zinc-300">Â·</span>
+                              <span className="text-zinc-300">·</span>
                               <span className="flex items-center gap-1">
                                 <PiCaretRight className="w-3 h-3 text-emerald-500" />
                                 {item.points} poin
@@ -536,7 +536,7 @@ export default function QuizComposite() {
                     ?.replace(/\*\*(.*?)\*\*/g, "$1")
                     .replace(/\*(.*?)\*/g, "$1")
                     .replace(/^#{1,6}\s+/gm, "")
-                    .replace(/^[-*+]\s+/gm, "â€¢ ")
+                    .replace(/^[-*+]\s+/gm, "\u2022 ")
                     .replace(/`(.*?)`/g, "$1")}
                 </div>
 
@@ -807,7 +807,7 @@ export default function QuizComposite() {
                             </p>
                             {!d.isCorrect && (
                               <p className="text-xs text-zinc-500 mt-1">
-                                Jawabanmu: opsi {d.selectedAnswer + 1} Â· Benar:
+                                Jawabanmu: opsi {d.selectedAnswer + 1} · Benar:
                                 opsi {d.correctAnswer + 1}
                               </p>
                             )}

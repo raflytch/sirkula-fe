@@ -42,6 +42,7 @@ import {
   Coins,
   ChevronRight,
   Sparkles,
+  Target,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -524,6 +525,18 @@ export const Navbar01 = React.forwardRef(
                               <Sparkles className="h-4 w-4 text-purple-600" />
                             </div>
                             <span className="font-medium">Sirkula-AI</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href="/quiz"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer"
+                          >
+                            <div className="h-8 w-8 rounded-md bg-teal-100 flex items-center justify-center">
+                              <Target className="h-4 w-4 text-teal-600" />
+                            </div>
+                            <span className="font-medium">Quiz Berhadiah</span>
                           </Link>
                         </DropdownMenuItem>
 
