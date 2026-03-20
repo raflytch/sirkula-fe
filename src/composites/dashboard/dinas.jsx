@@ -7,6 +7,7 @@ import {
   useGetAllGreenActions,
   useGetDistricts,
   useDownloadReportPdf,
+  useDownloadReportExcel,
 } from "@/hooks/use-green-actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -64,6 +65,7 @@ import {
   Building2,
   MapPinned,
   FileDown,
+  FileSpreadsheet,
   Loader2,
   BarChart3,
   TrendingUp,
@@ -160,6 +162,7 @@ export default function DinasDashboardComposite() {
   const { data: districtsData, isLoading: districtsLoading } =
     useGetDistricts();
   const downloadPdf = useDownloadReportPdf();
+  const downloadExcel = useDownloadReportExcel();
 
   const greenActions = greenActionsData?.data || [];
   const filteredActions = greenActions;
@@ -273,6 +276,12 @@ export default function DinasDashboardComposite() {
   const handleDownloadPdf = () => {
     if (selectedDistrict) {
       downloadPdf.mutate(selectedDistrict);
+    }
+  };
+
+  const handleDownloadExcel = () => {
+    if (selectedDistrict) {
+      downloadExcel.mutate(selectedDistrict);
     }
   };
 
@@ -492,19 +501,18 @@ export default function DinasDashboardComposite() {
         )}
       </div>
 
-      {/* PDF Report Generation */}
+      {/* Report Generation */}
       <div className="rounded-xl border border-green-200/60 bg-linear-to-r from-green-50/60 to-emerald-50/60 p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-          <div className="flex-1 space-y-3">
+        <div className="flex flex-col gap-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <FileDown className="h-5 w-5 text-green-600" />
               <h3 className="text-base sm:text-lg font-semibold text-zinc-800">
-                Generate Laporan PDF
+                Generate Laporan
               </h3>
             </div>
             <p className="text-xs text-zinc-500">
-              Pilih kelurahan untuk mengunduh laporan green action dalam format
-              PDF
+              Pilih kelurahan untuk mengunduh laporan green action
             </p>
             <div className="max-w-sm space-y-1.5">
               <Label htmlFor="pdf-district" className="text-xs text-zinc-600">
@@ -537,18 +545,33 @@ export default function DinasDashboardComposite() {
               </Select>
             </div>
           </div>
-          <Button
-            onClick={handleDownloadPdf}
-            disabled={!selectedDistrict || downloadPdf.isPending}
-            className="bg-green-600 hover:bg-green-700 text-white gap-2"
-          >
-            {downloadPdf.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <FileDown className="h-4 w-4" />
-            )}
-            {downloadPdf.isPending ? "Mengunduh..." : "Unduh Laporan"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={handleDownloadPdf}
+              disabled={!selectedDistrict || downloadPdf.isPending}
+              className="bg-green-600 hover:bg-green-700 text-white gap-2"
+            >
+              {downloadPdf.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileDown className="h-4 w-4" />
+              )}
+              {downloadPdf.isPending ? "Mengunduh..." : "Unduh PDF"}
+            </Button>
+            <Button
+              onClick={handleDownloadExcel}
+              disabled={!selectedDistrict || downloadExcel.isPending}
+              variant="outline"
+              className="gap-2 border-green-300 text-green-700 hover:bg-green-50"
+            >
+              {downloadExcel.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4" />
+              )}
+              {downloadExcel.isPending ? "Mengunduh..." : "Unduh Excel"}
+            </Button>
+          </div>
         </div>
       </div>
 

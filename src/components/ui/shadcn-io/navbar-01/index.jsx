@@ -46,33 +46,31 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Custom Hamburger Icon
 const HamburgerIcon = ({ isOpen }) => {
   return (
-    <div className="relative w-5 h-4 flex flex-col justify-between">
+    <div className="relative w-5 h-5 flex items-center justify-center">
       <span
         className={cn(
-          "block h-0.5 w-5 bg-current rounded-full transition-all duration-300",
-          isOpen && "rotate-45 translate-y-1.5",
+          "absolute block h-0.5 w-5 bg-current rounded-full transition-all duration-300 ease-in-out",
+          isOpen ? "rotate-45" : "-translate-y-1.5",
         )}
       />
       <span
         className={cn(
-          "block h-0.5 w-5 bg-current rounded-full transition-all duration-300",
-          isOpen && "opacity-0",
+          "absolute block h-0.5 w-5 bg-current rounded-full transition-all duration-200 ease-in-out",
+          isOpen ? "opacity-0 scale-0" : "opacity-100",
         )}
       />
       <span
         className={cn(
-          "block h-0.5 w-5 bg-current rounded-full transition-all duration-300",
-          isOpen && "-rotate-45 -translate-y-1.5",
+          "absolute block h-0.5 w-5 bg-current rounded-full transition-all duration-300 ease-in-out",
+          isOpen ? "-rotate-45" : "translate-y-1.5",
         )}
       />
     </div>
   );
 };
 
-// Logo Component
 const Logo = () => (
   <Image className="text-2xl w-10 h-10" src={images.logo} alt="Sirkula Logo" />
 );
@@ -108,7 +106,6 @@ export const Navbar01 = React.forwardRef(
       setMounted(true);
     }, []);
 
-    // Scroll listener for navbar background
     useEffect(() => {
       const handleScroll = () => {
         setIsScrolled(window.scrollY > 10);
@@ -290,7 +287,6 @@ export const Navbar01 = React.forwardRef(
           {...props}
         >
           <div className="flex h-14 items-center justify-between gap-4">
-            {/* Left side */}
             <div className="flex items-center gap-3">
               {isMobile && (
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -360,8 +356,6 @@ export const Navbar01 = React.forwardRef(
                         })
                       )}
                     </nav>
-
-                    {/* Mobile User Info */}
                     {session && (
                       <div className="mt-3 pt-3 border-t border-zinc-200/60">
                         <div className="flex items-center gap-3 px-3 py-2 bg-linear-to-r from-green-50 to-emerald-50 rounded-lg">
@@ -397,8 +391,6 @@ export const Navbar01 = React.forwardRef(
                     Sirkula
                   </span>
                 </Link>
-
-                {/* Desktop Navigation */}
                 {!isMobile && (
                   <NavigationMenu className="hidden lg:flex">
                     <NavigationMenuList className="gap-1">
@@ -444,15 +436,12 @@ export const Navbar01 = React.forwardRef(
                 )}
               </div>
             </div>
-
-            {/* Right side */}
             {!mounted || isLoading ? (
               <div className="flex items-center gap-3">
                 <Skeleton className="h-9 w-9 rounded-full" />
               </div>
             ) : session ? (
               <div className="flex items-center gap-3">
-                {/* Points Display - Desktop Only */}
                 {!isMobile && (
                   <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-green-50 to-emerald-50 rounded-full border border-green-100">
                     <Coins className="h-4 w-4 text-green-600" />
@@ -483,7 +472,6 @@ export const Navbar01 = React.forwardRef(
                     className="w-64 p-2 bg-white/95 backdrop-blur-lg border border-zinc-200/60 rounded-xl"
                     align="end"
                   >
-                    {/* User Info Header */}
                     <div className="px-3 py-3 mb-2 bg-linear-to-r from-zinc-50 to-zinc-100/50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
