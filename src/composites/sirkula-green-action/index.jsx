@@ -126,8 +126,7 @@ export default function SirkulaGreenActionComposite() {
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const isVideo = file.type.startsWith("video/");
-      const maxSize = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+      const maxSize = 2 * 1024 * 1024;
       if (file.size > maxSize) {
         setShowFileSizeDialog(true);
         e.target.value = "";
@@ -242,14 +241,13 @@ export default function SirkulaGreenActionComposite() {
               Ukuran File Terlalu Besar
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
-              File yang Anda pilih melebihi batas maksimal (Gambar:{" "}
-              <strong>10MB</strong>, Video: <strong>100MB</strong>). Silakan
-              pilih file dengan ukuran yang lebih kecil atau kompres file Anda
-              terlebih dahulu.
+              File yang Anda pilih melebihi batas maksimal <strong>2MB</strong>.
+              Silakan pilih file dengan ukuran yang lebih kecil atau kompres
+              file Anda terlebih dahulu.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction className="bg-emerald-600 hover:bg-emerald-700">
+            <AlertDialogAction className="bg-green-600 hover:bg-green-700 text-white">
               Mengerti
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -298,11 +296,7 @@ export default function SirkulaGreenActionComposite() {
                       {Object.entries(categories).map(([key, cat]) => {
                         const Icon = categoryIcons[key] || Recycle;
                         return (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            className="py-2.5"
-                          >
+                          <SelectItem key={key} value={key} className="py-2.5">
                             <div className="flex items-center justify-center gap-2.5 w-full">
                               <Icon className="h-4 w-4 text-emerald-600 shrink-0" />
                               <span className="font-medium">{cat.name}</span>
@@ -441,7 +435,7 @@ export default function SirkulaGreenActionComposite() {
               <Label htmlFor="media" className="text-sm font-medium">
                 Upload Media (Gambar/Video) *{" "}
                 <span className="text-xs text-muted-foreground">
-                  (Maks. 10MB gambar / 100MB video)
+                  (Maks. 2MB)
                 </span>
               </Label>
               <Input
