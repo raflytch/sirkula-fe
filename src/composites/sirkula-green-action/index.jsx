@@ -46,6 +46,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import FullscreenLoader from "@/components/ui/fullscreen-loader";
 import {
   Plus,
@@ -135,13 +142,24 @@ export default function SirkulaGreenActionComposite() {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      category: "",
+      subCategory: "",
+      description: "",
+      quantity: "",
+      actionType: "",
+      media: null,
+    });
+    setLocation(null);
+    setMediaPreview(null);
+    dispatch(resetGreenActionForm());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedLocation) {
-      return;
-    }
-
+    if (!selectedLocation) return;
     if (!formData.quantity || Number(formData.quantity) <= 0) return;
 
     const submitData = new FormData();
@@ -158,24 +176,19 @@ export default function SirkulaGreenActionComposite() {
     createMutation.mutate(submitData, {
       onSuccess: (data) => {
         setShowForm(false);
-        setFormData({
-          category: "",
-          subCategory: "",
-          description: "",
-          quantity: "",
-          actionType: "",
-          media: null,
-        });
-        setLocation(null);
-        setMediaPreview(null);
-        dispatch(resetGreenActionForm());
-
-        // Set created action ID untuk trigger redirect via useEffect
+        resetForm();
         if (data?.data?.id) {
           setCreatedActionId(data.data.id);
         }
       },
     });
+  };
+
+  const handleOpenChange = (open) => {
+    if (!open) {
+      resetForm();
+    }
+    setShowForm(open);
   };
 
   const categories = categoriesData?.data || {};
@@ -218,7 +231,6 @@ export default function SirkulaGreenActionComposite() {
 
   return (
     <>
-      {/* Alert Dialog untuk ukuran file terlalu besar */}
       <AlertDialog
         open={showFileSizeDialog}
         onOpenChange={setShowFileSizeDialog}
@@ -244,6 +256,253 @@ export default function SirkulaGreenActionComposite() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <Dialog open={showForm} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-emerald-600" />
+              Kirim Aksi Hijau Baru
+            </DialogTitle>
+            <DialogDescription>
+              Upload bukti aksi berkelanjutan Anda dan dapatkan poin
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-sm font-medium">
+                  Kategori *
+                </Label>
+                {categoriesLoading ? (
+                  <Skeleton className="h-11 w-full" />
+                ) : (
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => {
+                      setFormData({
+                        ...formData,
+                        category: value,
+                        subCategory: "",
+                      });
+                      dispatch(setSelectedCategory(value));
+                    }}
+                    required
+                  >
+                    <SelectTrigger
+                      id="category"
+                      className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 w-full"
+                    >
+                      <SelectValue placeholder="Pilih kategori" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {Object.entries(categories).map(([key, cat]) => {
+                        const Icon = categoryIcons[key] || Recycle;
+                        return (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            className="py-2.5"
+                          >
+                            <div className="flex items-center justify-center gap-2.5 w-full">
+                              <Icon className="h-4 w-4 text-emerald-600 shrink-0" />
+                              <span className="font-medium">{cat.name}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subCategory" className="text-sm font-medium">
+                  Sub Kategori *
+                </Label>
+                {selectedCategoryData ? (
+                  <Select
+                    value={formData.subCategory}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, subCategory: value });
+                      dispatch(setSelectedSubCategory(value));
+                    }}
+                    required
+                  >
+                    <SelectTrigger
+                      id="subCategory"
+                      className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 w-full"
+                    >
+                      <SelectValue placeholder="Pilih sub kategori" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {selectedCategoryData.subCategories.map((sub) => (
+                        <SelectItem
+                          key={sub.id}
+                          value={sub.id}
+                          className="py-2.5"
+                        >
+                          <div className="flex items-center justify-center w-full">
+                            <span className="font-medium">{sub.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select disabled>
+                    <SelectTrigger
+                      disabled
+                      className="h-11 border-slate-300 w-full"
+                    >
+                      <SelectValue placeholder="Pilih kategori terlebih dahulu" />
+                    </SelectTrigger>
+                  </Select>
+                )}
+              </div>
+            </div>
+
+            {formData.subCategory && selectedCategoryData && (
+              <Alert className="bg-emerald-50 border-emerald-200">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                <AlertDescription className="text-sm text-emerald-800">
+                  <strong>Kriteria:</strong>{" "}
+                  {
+                    selectedCategoryData.subCategories.find(
+                      (s) => s.id === formData.subCategory,
+                    )?.criteria
+                  }
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Deskripsi (Opsional)
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Jelaskan aksi hijau Anda secara detail..."
+                rows={3}
+                className="resize-none border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="quantity" className="text-sm font-medium">
+                  Kuantitas *
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  value={formData.quantity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, quantity: e.target.value })
+                  }
+                  placeholder="Masukkan jumlah (contoh: 5)"
+                  required
+                  className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="actionType" className="text-sm font-medium">
+                  Satuan (Opsional)
+                </Label>
+                <Input
+                  id="actionType"
+                  type="text"
+                  value={formData.actionType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, actionType: e.target.value })
+                  }
+                  placeholder="Contoh: kg, pohon, item"
+                  className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                Pilih Lokasi di Peta *
+              </Label>
+              <Map
+                onLocationSelect={handleLocationSelect}
+                initialPosition={selectedLocation}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="media" className="text-sm font-medium">
+                Upload Media (Gambar/Video) *{" "}
+                <span className="text-xs text-muted-foreground">
+                  (Maks. 10MB gambar / 100MB video)
+                </span>
+              </Label>
+              <Input
+                id="media"
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleMediaChange}
+                required
+                className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+              {mediaPreview && (
+                <div className="mt-3 relative">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full z-10"
+                    onClick={() => {
+                      setMediaPreview(null);
+                      setFormData({ ...formData, media: null });
+                      document.getElementById("media").value = "";
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  {formData.media?.type.startsWith("image/") ? (
+                    <img
+                      src={mediaPreview}
+                      alt="Preview"
+                      className="max-h-64 w-full object-contain rounded-lg border-2 border-slate-200"
+                    />
+                  ) : (
+                    <video
+                      src={mediaPreview}
+                      controls
+                      className="max-h-64 w-full rounded-lg border-2 border-slate-200"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-medium"
+              disabled={
+                !selectedLocation ||
+                !formData.media ||
+                !formData.category ||
+                !formData.subCategory ||
+                !formData.quantity ||
+                Number(formData.quantity) <= 0
+              }
+            >
+              <Upload className="h-5 w-5" />
+              Kirim Aksi Hijau
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6 sm:space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -268,12 +527,12 @@ export default function SirkulaGreenActionComposite() {
             </p>
           </div>
           <Button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => setShowForm(true)}
             className="gap-2 bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
             size="lg"
           >
             <Plus className="h-5 w-5" />
-            {showForm ? "Batal" : "Aksi Baru"}
+            Aksi Baru
           </Button>
         </div>
 
@@ -344,260 +603,6 @@ export default function SirkulaGreenActionComposite() {
               </CardContent>
             </Card>
           </div>
-        )}
-
-        {showForm && (
-          <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">
-            <CardHeader className="border-b border-slate-100 py-4">
-              <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
-                <Sparkles className="h-6 w-6 text-emerald-600" />
-                Kirim Aksi Hijau Baru
-              </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
-                Upload bukti aksi berkelanjutan Anda dan dapatkan poin
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="category" className="text-sm font-medium">
-                      Kategori *
-                    </Label>
-                    {categoriesLoading ? (
-                      <Skeleton className="h-11 w-full" />
-                    ) : (
-                      <Select
-                        value={formData.category}
-                        onValueChange={(value) => {
-                          setFormData({
-                            ...formData,
-                            category: value,
-                            subCategory: "",
-                          });
-                          dispatch(setSelectedCategory(value));
-                        }}
-                        required
-                      >
-                        <SelectTrigger
-                          id="category"
-                          className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 w-full"
-                        >
-                          <SelectValue placeholder="Pilih kategori" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {Object.entries(categories).map(([key, cat]) => {
-                            const Icon = categoryIcons[key] || Recycle;
-                            return (
-                              <SelectItem
-                                key={key}
-                                value={key}
-                                className="py-2.5"
-                              >
-                                <div className="flex items-center justify-center gap-2.5 w-full">
-                                  <Icon className="h-4 w-4 text-emerald-600 shrink-0" />
-                                  <span className="font-medium">
-                                    {cat.name}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="subCategory"
-                      className="text-sm font-medium"
-                    >
-                      Sub Kategori *
-                    </Label>
-                    {selectedCategoryData ? (
-                      <Select
-                        value={formData.subCategory}
-                        onValueChange={(value) => {
-                          setFormData({ ...formData, subCategory: value });
-                          dispatch(setSelectedSubCategory(value));
-                        }}
-                        required
-                      >
-                        <SelectTrigger
-                          id="subCategory"
-                          className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 w-full"
-                        >
-                          <SelectValue placeholder="Pilih sub kategori" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {selectedCategoryData.subCategories.map((sub) => (
-                            <SelectItem
-                              key={sub.id}
-                              value={sub.id}
-                              className="py-2.5"
-                            >
-                              <div className="flex items-center justify-center w-full">
-                                <span className="font-medium">{sub.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Select disabled>
-                        <SelectTrigger
-                          disabled
-                          className="h-11 border-slate-300 w-full"
-                        >
-                          <SelectValue placeholder="Pilih kategori terlebih dahulu" />
-                        </SelectTrigger>
-                      </Select>
-                    )}
-                  </div>
-                </div>
-
-                {formData.subCategory && selectedCategoryData && (
-                  <Alert className="bg-emerald-50 border-emerald-200">
-                    <Sparkles className="h-4 w-4 text-emerald-600" />
-                    <AlertDescription className="text-sm text-emerald-800">
-                      <strong>Kriteria:</strong>{" "}
-                      {
-                        selectedCategoryData.subCategories.find(
-                          (s) => s.id === formData.subCategory,
-                        )?.criteria
-                      }
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-sm font-medium">
-                    Deskripsi (Opsional)
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    placeholder="Jelaskan aksi hijau Anda secara detail..."
-                    rows={3}
-                    className="resize-none border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity" className="text-sm font-medium">
-                      Kuantitas *
-                    </Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min="0.01"
-                      step="any"
-                      value={formData.quantity}
-                      onChange={(e) =>
-                        setFormData({ ...formData, quantity: e.target.value })
-                      }
-                      placeholder="Masukkan jumlah (contoh: 5)"
-                      required
-                      className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="actionType" className="text-sm font-medium">
-                      Satuan (Opsional)
-                    </Label>
-                    <Input
-                      id="actionType"
-                      type="text"
-                      value={formData.actionType}
-                      onChange={(e) =>
-                        setFormData({ ...formData, actionType: e.target.value })
-                      }
-                      placeholder="Contoh: kg, pohon, item"
-                      className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    Pilih Lokasi di Peta *
-                  </Label>
-                  <Map
-                    onLocationSelect={handleLocationSelect}
-                    initialPosition={selectedLocation}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="media" className="text-sm font-medium">
-                    Upload Media (Gambar/Video) *{" "}
-                    <span className="text-xs text-muted-foreground">
-                      (Maks. 1MB)
-                    </span>
-                  </Label>
-                  <Input
-                    id="media"
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={handleMediaChange}
-                    required
-                    className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                  />
-                  {mediaPreview && (
-                    <div className="mt-3 relative">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-8 w-8 rounded-full z-10"
-                        onClick={() => {
-                          setMediaPreview(null);
-                          setFormData({ ...formData, media: null });
-                          document.getElementById("media").value = "";
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                      {formData.media?.type.startsWith("image/") ? (
-                        <img
-                          src={mediaPreview}
-                          alt="Preview"
-                          className="max-h-64 w-full object-contain rounded-lg border-2 border-slate-200"
-                        />
-                      ) : (
-                        <video
-                          src={mediaPreview}
-                          controls
-                          className="max-h-64 w-full rounded-lg border-2 border-slate-200"
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-medium"
-                  disabled={
-                    !selectedLocation ||
-                    !formData.media ||
-                    !formData.category ||
-                    !formData.subCategory ||
-                    !formData.quantity ||
-                    Number(formData.quantity) <= 0
-                  }
-                >
-                  <Upload className="h-5 w-5" />
-                  Kirim Aksi Hijau
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
         )}
 
         <Card className="border-slate-200/80 bg-white/60 backdrop-blur-sm">

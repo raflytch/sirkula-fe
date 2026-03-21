@@ -413,7 +413,7 @@ export default function QuizComposite() {
                     return (
                       <div
                         key={item.id}
-                        className={`relative rounded-2xl border overflow-hidden transition-colors ${grade.border}`}
+                        className={`relative rounded-2xl border overflow-hidden transition-colors bg-white ${grade.border}`}
                       >
                         <div
                           className={`absolute left-0 top-0 bottom-0 w-1 ${grade.ring} rounded-l-2xl`}
