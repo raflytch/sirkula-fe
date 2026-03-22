@@ -78,6 +78,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SparklesText } from "@/components/ui/sparkles-text";
 import { AuroraText } from "@/components/ui/aurora-text";
+import GreenActionResultModal from "@/components/green-action-result-modal";
 
 const Map = dynamic(() => import("@/components/map"), { ssr: false });
 
@@ -104,13 +105,20 @@ export default function SirkulaGreenActionComposite() {
   });
   const [selectedLocation, setLocation] = useState(null);
   const [mediaPreview, setMediaPreview] = useState(null);
+  const [actionResult, setActionResult] = useState(null);
+  const [showResultModal, setShowResultModal] = useState(false);
 
   const { data: categoriesData, isLoading: categoriesLoading } =
     useGreenActionCategories();
   const { data: actionsData, isLoading: actionsLoading } = useMyGreenActions();
   const { data: statsData, isLoading: statsLoading } = useMyGreenActionStats();
   const { data: impactData, isLoading: impactLoading } = useGreenActionImpact();
-  const createMutation = useCreateGreenAction();
+  const createMutation = useCreateGreenAction({
+    onResult: (result) => {
+      setActionResult(result);
+      setShowResultModal(true);
+    },
+  });
 
   useEffect(() => {
     if (createdActionId) {
@@ -176,9 +184,13 @@ export default function SirkulaGreenActionComposite() {
       onSuccess: (data) => {
         setShowForm(false);
         resetForm();
-        if (data?.data?.id) {
+        if (data?.data?.id && data.data.status !== "REJECTED") {
           setCreatedActionId(data.data.id);
         }
+      },
+      onError: () => {
+        setShowForm(false);
+        resetForm();
       },
     });
   };
@@ -927,6 +939,15 @@ export default function SirkulaGreenActionComposite() {
           )
         )}
       </div>
+
+      <GreenActionResultModal
+        result={actionResult}
+        open={showResultModal}
+        onClose={() => {
+          setShowResultModal(false);
+          setActionResult(null);
+        }}
+      />
     </>
   );
 }

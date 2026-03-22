@@ -31,7 +31,7 @@ export const useGreenActionById = (id) => {
   });
 };
 
-export const useCreateGreenAction = () => {
+export const useCreateGreenAction = ({ onResult } = {}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -41,21 +41,33 @@ export const useCreateGreenAction = () => {
       queryClient.invalidateQueries({ queryKey: ["my-green-action-stats"] });
 
       if (data.data.status === "VERIFIED") {
-        toast.success("Green action verified successfully!", {
-          description: `You earned ${data.data.points} points!`,
+        onResult?.({
+          type: "ACCEPTED",
+          data: data.data,
         });
       } else if (data.data.status === "REJECTED") {
-        toast.error("Green action rejected", {
-          description: data.data.aiFeedback,
+        onResult?.({
+          type: "REJECTED",
+          message: data.message || "Aksi hijau ditolak oleh AI",
+          details: data.data,
         });
       } else {
         toast.success("Green action submitted successfully!");
       }
     },
     onError: (error) => {
-      toast.error("Failed to submit green action", {
-        description: error.response?.data?.message || error.message,
-      });
+      const responseData = error.response?.data;
+      if (responseData?.details?.status === "REJECTED") {
+        onResult?.({
+          type: "REJECTED",
+          message: responseData.message || "Aksi hijau ditolak oleh AI",
+          details: responseData.details,
+        });
+      } else {
+        toast.error("Failed to submit green action", {
+          description: responseData?.message || error.message,
+        });
+      }
     },
   });
 };
