@@ -47,6 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -102,6 +103,8 @@ export default function QuizComposite() {
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
   const [reviewingMaterial, setReviewingMaterial] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitMessage, setLimitMessage] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -185,7 +188,15 @@ export default function QuizComposite() {
       );
       dispatch(setQuestions(normalizedQuestions));
       dispatch(showMaterial());
-    } catch {}
+    } catch (err) {
+      if (err?.response?.status === 403) {
+        setLimitMessage(
+          err.response?.data?.message ||
+            "Anda sudah mencapai batas maksimal quiz per minggu.",
+        );
+        setShowLimitModal(true);
+      }
+    }
   };
 
   const handleStartQuiz = () => {
@@ -941,7 +952,66 @@ export default function QuizComposite() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <QuizLimitModal
+          open={showLimitModal}
+          message={limitMessage}
+          onClose={() => setShowLimitModal(false)}
+        />
       </div>
     </div>
+  );
+}
+
+function QuizLimitModal({ open, message, onClose }) {
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => onClose(), 7000);
+    return () => clearTimeout(timer);
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative z-10 w-[90%] max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100">
+                <PiWarning className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-800">
+                  Batas Quiz Tercapai
+                </h3>
+                <p className="text-sm text-zinc-500 mt-1.5 leading-relaxed">
+                  {message}
+                </p>
+              </div>
+              <Button
+                onClick={onClose}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                size="sm"
+              >
+                Mengerti
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

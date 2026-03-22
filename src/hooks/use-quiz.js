@@ -8,6 +8,7 @@ export const useGenerateQuiz = () => {
   return useMutation({
     mutationFn: quizService.generateQuiz,
     onError: (error) => {
+      if (error.response?.status === 403) return;
       toast.error(
         error.response?.data?.message || "Gagal memuat soal quiz. Coba lagi.",
       );
