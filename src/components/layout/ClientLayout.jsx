@@ -39,13 +39,16 @@ export default function ClientLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fdf8] relative overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[#f5faf7] relative overflow-x-hidden">
       <div
-        className="absolute inset-0 z-0"
+        className="fixed inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: `
-            radial-gradient(circle at 30% 70%, rgba(167, 243, 208, 0.35), transparent 60%),
-            radial-gradient(circle at 70% 30%, rgba(187, 247, 208, 0.4), transparent 60%)`,
+            radial-gradient(ellipse 80% 60% at 10% 90%, rgba(110, 231, 183, 0.25), transparent 50%),
+            radial-gradient(ellipse 60% 50% at 85% 20%, rgba(56, 189, 248, 0.15), transparent 50%),
+            radial-gradient(ellipse 50% 40% at 50% 50%, rgba(167, 243, 208, 0.2), transparent 50%),
+            radial-gradient(ellipse 40% 50% at 20% 30%, rgba(196, 181, 253, 0.12), transparent 50%),
+            radial-gradient(ellipse 45% 35% at 75% 75%, rgba(253, 230, 138, 0.1), transparent 50%)`,
         }}
       />
       <div className="relative z-10">

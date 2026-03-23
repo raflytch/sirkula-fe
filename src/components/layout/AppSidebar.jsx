@@ -18,6 +18,7 @@ import {
   Store,
   Building2,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -78,6 +79,11 @@ const adminMenuItems = [
     title: "Pengguna",
     url: "/dashboard/admin/users",
     icon: User,
+  },
+  {
+    title: "Anti-Cheat",
+    url: "/dashboard/admin/flagged",
+    icon: AlertTriangle,
   },
 ];
 

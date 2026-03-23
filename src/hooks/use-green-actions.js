@@ -52,7 +52,10 @@ export const useCreateGreenAction = ({ onResult } = {}) => {
           details: data.data,
         });
       } else {
-        toast.success("Green action submitted successfully!");
+        onResult?.({
+          type: "ACCEPTED",
+          data: data.data,
+        });
       }
     },
     onError: (error) => {
@@ -64,8 +67,14 @@ export const useCreateGreenAction = ({ onResult } = {}) => {
           details: responseData.details,
         });
       } else {
-        toast.error("Failed to submit green action", {
-          description: responseData?.message || error.message,
+        onResult?.({
+          type: "ERROR",
+          message:
+            responseData?.message ||
+            error.message ||
+            "Gagal mengirim aksi hijau",
+          errorType: responseData?.error || "Error",
+          failureType: responseData?.details?.failureType || null,
         });
       }
     },
@@ -174,6 +183,47 @@ export const useDownloadReportExcel = () => {
     },
     onError: (error) => {
       toast.error("Gagal mengunduh laporan Excel", {
+        description: error.response?.data?.message || error.message,
+      });
+    },
+  });
+};
+
+export const useFlaggedActions = (params = {}) => {
+  return useQuery({
+    queryKey: ["flagged-actions", params],
+    queryFn: () => greenActionService.getFlaggedActions(params),
+  });
+};
+
+export const useApproveFlaggedAction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: greenActionService.approveFlaggedAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flagged-actions"] });
+      toast.success("Aksi berhasil disetujui, poin dirilis");
+    },
+    onError: (error) => {
+      toast.error("Gagal menyetujui aksi", {
+        description: error.response?.data?.message || error.message,
+      });
+    },
+  });
+};
+
+export const useRejectFlaggedAction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: greenActionService.rejectFlaggedAction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flagged-actions"] });
+      toast.success("Aksi berhasil ditolak");
+    },
+    onError: (error) => {
+      toast.error("Gagal menolak aksi", {
         description: error.response?.data?.message || error.message,
       });
     },

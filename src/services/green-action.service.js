@@ -72,4 +72,23 @@ export const greenActionService = {
     });
     return response.data;
   },
+
+  getFlaggedActions: async (params = {}) => {
+    const response = await httpClient.get("/green-actions/flagged", { params });
+    return response.data;
+  },
+
+  approveFlaggedAction: async (id) => {
+    const response = await httpClient.post(
+      `/green-actions/flagged/${encodeURIComponent(id)}/approve`,
+    );
+    return response.data;
+  },
+
+  rejectFlaggedAction: async (id) => {
+    const response = await httpClient.post(
+      `/green-actions/flagged/${encodeURIComponent(id)}/reject`,
+    );
+    return response.data;
+  },
 };

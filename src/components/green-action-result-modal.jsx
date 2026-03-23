@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
   XCircle,
+  AlertTriangle,
   Award,
   MapPin,
   Tag,
@@ -37,11 +38,9 @@ function ProgressBar({ durationMs, color }) {
 }
 
 function AcceptedContent({ data }) {
-  const locationParts = [
-    data.locationName,
-    data.district,
-    data.city,
-  ].filter(Boolean);
+  const locationParts = [data.locationName, data.district, data.city].filter(
+    Boolean,
+  );
 
   return (
     <motion.div
@@ -54,7 +53,12 @@ function AcceptedContent({ data }) {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.12 }}
+          transition={{
+            type: "spring",
+            stiffness: 220,
+            damping: 16,
+            delay: 0.12,
+          }}
           className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center"
         >
           <CheckCircle2 className="h-6 w-6 text-emerald-600" />
@@ -131,7 +135,12 @@ function RejectedContent({ details, message }) {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.12 }}
+          transition={{
+            type: "spring",
+            stiffness: 220,
+            damping: 16,
+            delay: 0.12,
+          }}
           className="h-12 w-12 rounded-full bg-rose-100 flex items-center justify-center"
         >
           <XCircle className="h-6 w-6 text-rose-600" />
@@ -202,6 +211,64 @@ function RejectedContent({ details, message }) {
   );
 }
 
+const failureTypeLabels = {
+  QUANTITY_EXCEEDED: "Batas Kuantitas",
+  COOLDOWN_ACTIVE: "Cooldown Aktif",
+};
+
+function ErrorContent({ message, errorType, failureType }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.25 }}
+      className="space-y-3"
+    >
+      <div className="flex items-center justify-center">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 220,
+            damping: 16,
+            delay: 0.12,
+          }}
+          className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center"
+        >
+          <AlertTriangle className="h-6 w-6 text-amber-600" />
+        </motion.div>
+      </div>
+
+      <div className="text-center space-y-0.5">
+        <h3 className="text-base font-semibold text-amber-700">
+          {errorType === "Forbidden" ? "Batas Tercapai" : "Gagal Mengirim"}
+        </h3>
+        {failureType && failureTypeLabels[failureType] && (
+          <Badge
+            variant="secondary"
+            className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]"
+          >
+            {failureTypeLabels[failureType]}
+          </Badge>
+        )}
+      </div>
+
+      <div className="space-y-2.5 rounded-lg bg-amber-50/60 border border-amber-100 p-3">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-amber-700 mb-0.5">
+              Detail
+            </p>
+            <p className="text-xs text-amber-800 leading-relaxed">{message}</p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function GreenActionResultModal({ result, open, onClose }) {
   const handleClose = useCallback(() => {
     onClose?.();
@@ -217,6 +284,31 @@ export default function GreenActionResultModal({ result, open, onClose }) {
   if (!result) return null;
 
   const isAccepted = result.type === "ACCEPTED";
+  const isError = result.type === "ERROR";
+
+  const getTitle = () => {
+    if (isAccepted) return "Aksi Hijau Diterima";
+    if (isError) return "Gagal Mengirim Aksi";
+    return "Aksi Hijau Ditolak";
+  };
+
+  const getDescription = () => {
+    if (isAccepted) return "Aksi hijau Anda telah diterima oleh AI";
+    if (isError) return "Terjadi kesalahan saat mengirim aksi hijau";
+    return "Aksi hijau Anda ditolak oleh AI";
+  };
+
+  const getButtonColor = () => {
+    if (isAccepted) return "bg-emerald-600 hover:bg-emerald-700";
+    if (isError) return "bg-amber-600 hover:bg-amber-700";
+    return "bg-rose-600 hover:bg-rose-700";
+  };
+
+  const getProgressColor = () => {
+    if (isAccepted) return "bg-emerald-500";
+    if (isError) return "bg-amber-500";
+    return "bg-rose-500";
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
@@ -224,13 +316,9 @@ export default function GreenActionResultModal({ result, open, onClose }) {
         className="sm:max-w-sm max-w-[calc(100%-2rem)] p-0 overflow-hidden border-0 shadow-xl gap-0"
         showCloseButton={false}
       >
-        <DialogTitle className="sr-only">
-          {isAccepted ? "Aksi Hijau Diterima" : "Aksi Hijau Ditolak"}
-        </DialogTitle>
+        <DialogTitle className="sr-only">{getTitle()}</DialogTitle>
         <DialogDescription className="sr-only">
-          {isAccepted
-            ? "Aksi hijau Anda telah diterima oleh AI"
-            : "Aksi hijau Anda ditolak oleh AI"}
+          {getDescription()}
         </DialogDescription>
 
         <div className="relative px-5 pt-5 pb-4">
@@ -244,6 +332,13 @@ export default function GreenActionResultModal({ result, open, onClose }) {
           <AnimatePresence mode="wait">
             {isAccepted ? (
               <AcceptedContent key="accepted" data={result.data} />
+            ) : isError ? (
+              <ErrorContent
+                key="error"
+                message={result.message}
+                errorType={result.errorType}
+                failureType={result.failureType}
+              />
             ) : (
               <RejectedContent
                 key="rejected"
@@ -262,20 +357,13 @@ export default function GreenActionResultModal({ result, open, onClose }) {
             <Button
               onClick={handleClose}
               size="sm"
-              className={`w-full ${
-                isAccepted
-                  ? "bg-emerald-600 hover:bg-emerald-700"
-                  : "bg-rose-600 hover:bg-rose-700"
-              } text-white text-sm`}
+              className={`w-full ${getButtonColor()} text-white text-sm`}
             >
               {isAccepted ? "Lanjutkan" : "Mengerti"}
             </Button>
           </motion.div>
 
-          <ProgressBar
-            durationMs={AUTO_CLOSE_MS}
-            color={isAccepted ? "bg-emerald-500" : "bg-rose-500"}
-          />
+          <ProgressBar durationMs={AUTO_CLOSE_MS} color={getProgressColor()} />
         </div>
       </DialogContent>
     </Dialog>
