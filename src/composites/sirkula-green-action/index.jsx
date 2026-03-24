@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import dynamic from "next/dynamic";
+import { useSession } from "@/hooks/use-auth";
 import {
   useMyGreenActions,
   useMyGreenActionStats,
@@ -79,6 +80,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SparklesText } from "@/components/ui/sparkles-text";
 import { AuroraText } from "@/components/ui/aurora-text";
 import GreenActionResultModal from "@/components/green-action-result-modal";
+import GreenActionTermsModal from "@/components/green-action-terms-modal";
 
 const Map = dynamic(() => import("@/components/map"), { ssr: false });
 
@@ -92,9 +94,9 @@ const categoryIcons = {
 export default function SirkulaGreenActionComposite() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { data: session } = useSession();
   const [showForm, setShowForm] = useState(false);
   const [showFileSizeDialog, setShowFileSizeDialog] = useState(false);
-  const [createdActionId, setCreatedActionId] = useState(null);
   const [formData, setFormData] = useState({
     category: "",
     subCategory: "",
@@ -107,6 +109,7 @@ export default function SirkulaGreenActionComposite() {
   const [mediaPreview, setMediaPreview] = useState(null);
   const [actionResult, setActionResult] = useState(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [pendingRedirectId, setPendingRedirectId] = useState(null);
 
   const { data: categoriesData, isLoading: categoriesLoading } =
     useGreenActionCategories();
@@ -120,11 +123,7 @@ export default function SirkulaGreenActionComposite() {
     },
   });
 
-  useEffect(() => {
-    if (createdActionId) {
-      router.push(`/sirkula-green-action/${createdActionId}`);
-    }
-  }, [createdActionId, router]);
+  // Redirect is now handled when the result modal closes
 
   const handleLocationSelect = (location) => {
     setLocation(location);
@@ -185,7 +184,7 @@ export default function SirkulaGreenActionComposite() {
         setShowForm(false);
         resetForm();
         if (data?.data?.id && data.data.status !== "REJECTED") {
-          setCreatedActionId(data.data.id);
+          setPendingRedirectId(data.data.id);
         }
       },
       onError: () => {
@@ -242,6 +241,8 @@ export default function SirkulaGreenActionComposite() {
 
   return (
     <>
+      {session?.id && <GreenActionTermsModal userId={session.id} />}
+
       <AlertDialog
         open={showFileSizeDialog}
         onOpenChange={setShowFileSizeDialog}
@@ -943,9 +944,14 @@ export default function SirkulaGreenActionComposite() {
       <GreenActionResultModal
         result={actionResult}
         open={showResultModal}
+        autoClose={false}
         onClose={() => {
           setShowResultModal(false);
           setActionResult(null);
+          if (pendingRedirectId) {
+            router.push(`/sirkula-green-action/${pendingRedirectId}`);
+            setPendingRedirectId(null);
+          }
         }}
       />
     </>

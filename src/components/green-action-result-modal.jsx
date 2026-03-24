@@ -269,17 +269,22 @@ function ErrorContent({ message, errorType, failureType }) {
   );
 }
 
-export default function GreenActionResultModal({ result, open, onClose }) {
+export default function GreenActionResultModal({
+  result,
+  open,
+  onClose,
+  autoClose = true,
+}) {
   const handleClose = useCallback(() => {
     onClose?.();
   }, [onClose]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !autoClose) return;
 
     const timer = setTimeout(handleClose, AUTO_CLOSE_MS);
     return () => clearTimeout(timer);
-  }, [open, handleClose]);
+  }, [open, autoClose, handleClose]);
 
   if (!result) return null;
 
@@ -363,7 +368,12 @@ export default function GreenActionResultModal({ result, open, onClose }) {
             </Button>
           </motion.div>
 
-          <ProgressBar durationMs={AUTO_CLOSE_MS} color={getProgressColor()} />
+          {autoClose && (
+            <ProgressBar
+              durationMs={AUTO_CLOSE_MS}
+              color={getProgressColor()}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>

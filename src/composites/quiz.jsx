@@ -47,6 +47,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -964,54 +970,84 @@ export default function QuizComposite() {
 }
 
 function QuizLimitModal({ open, message, onClose }) {
-  useEffect(() => {
-    if (!open) return;
-    const timer = setTimeout(() => onClose(), 7000);
-    return () => clearTimeout(timer);
-  }, [open, onClose]);
-
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/40"
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent
+        className="sm:max-w-sm max-w-[calc(100%-2rem)] p-0 overflow-hidden border-0 shadow-xl gap-0"
+        showCloseButton={false}
+      >
+        <DialogTitle className="sr-only">Batas Quiz Tercapai</DialogTitle>
+        <DialogDescription className="sr-only">
+          Anda telah mencapai batas quiz
+        </DialogDescription>
+
+        <div className="relative px-5 pt-5 pb-4">
+          <button
             onClick={onClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative z-10 w-[90%] max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+            className="absolute top-2.5 right-2.5 h-7 w-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors z-10"
           >
-            <div className="flex flex-col items-center text-center gap-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100">
-                <PiWarning className="w-6 h-6 text-amber-600" />
+            <PiXCircle className="h-4 w-4 text-slate-400" />
+          </button>
+
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.25 }}
+            className="space-y-3"
+          >
+            <div className="flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 220,
+                  damping: 16,
+                  delay: 0.12,
+                }}
+                className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center"
+              >
+                <PiWarning className="h-6 w-6 text-amber-600" />
+              </motion.div>
+            </div>
+
+            <div className="text-center space-y-0.5">
+              <h3 className="text-base font-semibold text-amber-700">
+                Batas Quiz Tercapai
+              </h3>
+            </div>
+
+            <div className="space-y-2.5 rounded-lg bg-amber-50/60 border border-amber-100 p-3">
+              <div className="flex items-start gap-2">
+                <PiWarning className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-amber-700 mb-0.5">
+                    Detail
+                  </p>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    {message}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-semibold text-zinc-800">
-                  Batas Quiz Tercapai
-                </h3>
-                <p className="text-sm text-zinc-500 mt-1.5 leading-relaxed">
-                  {message}
-                </p>
-              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.25 }}
+              className="mt-3"
+            >
               <Button
                 onClick={onClose}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
                 size="sm"
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm"
               >
                 Mengerti
               </Button>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
-      )}
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }
