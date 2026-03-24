@@ -56,6 +56,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  useFileValidation,
+  FileSizeAlertDialog,
+} from "@/hooks/use-file-validation";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   PieChart,
@@ -103,6 +107,8 @@ export default function UmkmVoucherComposite() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [formData, setFormData] = useState(initialFormData);
+  const { validateFile, showFileSizeDialog, setShowFileSizeDialog } =
+    useFileValidation();
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -135,6 +141,10 @@ export default function UmkmVoucherComposite() {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!validateFile(file)) {
+        e.target.value = "";
+        return;
+      }
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -255,6 +265,11 @@ export default function UmkmVoucherComposite() {
   }
 
   return (
+    <>
+    <FileSizeAlertDialog
+      open={showFileSizeDialog}
+      onOpenChange={setShowFileSizeDialog}
+    />
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -324,7 +339,7 @@ export default function UmkmVoucherComposite() {
                         Upload Gambar
                       </Button>
                       <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                        Opsional. JPEG, PNG, GIF, WebP
+                        Opsional. JPEG, PNG, GIF, WebP. Maks 1MB
                       </p>
                     </div>
                   </div>
@@ -825,5 +840,6 @@ export default function UmkmVoucherComposite() {
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   Eye,
   EyeOff,
-  XCircle,
   ShieldCheck,
   KeyRound,
   Sparkles,
@@ -43,14 +42,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  useFileValidation,
+  FileSizeAlertDialog,
+} from "@/hooks/use-file-validation";
 import {
   InputOTP,
   InputOTPGroup,
@@ -126,12 +120,13 @@ export default function ProfileComposite() {
     currentPassword: "",
     newPassword: "",
   });
+  const { validateFile, showFileSizeDialog, setShowFileSizeDialog } =
+    useFileValidation();
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState(1);
   const [deleteOtp, setDeleteOtp] = useState("");
-  const [showFileSizeDialog, setShowFileSizeDialog] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -160,9 +155,7 @@ export default function ProfileComposite() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      const maxSize = 1 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setShowFileSizeDialog(true);
+      if (!validateFile(file)) {
         e.target.value = "";
         return;
       }
@@ -237,29 +230,10 @@ export default function ProfileComposite() {
 
   return (
     <>
-      <AlertDialog
+      <FileSizeAlertDialog
         open={showFileSizeDialog}
         onOpenChange={setShowFileSizeDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-              <XCircle className="h-5 w-5" />
-              Ukuran File Terlalu Besar
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm">
-              File yang Anda pilih melebihi batas maksimal <strong>1MB</strong>.
-              Silakan pilih file dengan ukuran yang lebih kecil atau kompres
-              file Anda terlebih dahulu.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction className="bg-emerald-600 hover:bg-emerald-700">
-              Mengerti
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
 
       <div className="min-h-screen">
         <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">

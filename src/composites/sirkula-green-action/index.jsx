@@ -39,14 +39,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  useFileValidation,
+  FileSizeAlertDialog,
+} from "@/hooks/use-file-validation";
 import {
   Dialog,
   DialogContent,
@@ -95,8 +90,9 @@ export default function SirkulaGreenActionComposite() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { data: session } = useSession();
+  const { validateFile, showFileSizeDialog, setShowFileSizeDialog } =
+    useFileValidation();
   const [showForm, setShowForm] = useState(false);
-  const [showFileSizeDialog, setShowFileSizeDialog] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
     subCategory: "",
@@ -133,9 +129,7 @@ export default function SirkulaGreenActionComposite() {
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const maxSize = 2 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setShowFileSizeDialog(true);
+      if (!validateFile(file)) {
         e.target.value = "";
         return;
       }
@@ -243,29 +237,10 @@ export default function SirkulaGreenActionComposite() {
     <>
       {session?.id && <GreenActionTermsModal userId={session.id} />}
 
-      <AlertDialog
+      <FileSizeAlertDialog
         open={showFileSizeDialog}
         onOpenChange={setShowFileSizeDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-              <XCircle className="h-5 w-5" />
-              Ukuran File Terlalu Besar
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm">
-              File yang Anda pilih melebihi batas maksimal <strong>2MB</strong>.
-              Silakan pilih file dengan ukuran yang lebih kecil atau kompres
-              file Anda terlebih dahulu.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction className="bg-green-600 hover:bg-green-700 text-white">
-              Mengerti
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
 
       <Dialog open={showForm} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -448,7 +423,7 @@ export default function SirkulaGreenActionComposite() {
               <Label htmlFor="media" className="text-sm font-medium">
                 Upload Media (Gambar/Video) *{" "}
                 <span className="text-xs text-muted-foreground">
-                  (Maks. 2MB)
+                  (Maks. 1MB)
                 </span>
               </Label>
               <Input
