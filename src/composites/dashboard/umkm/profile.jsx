@@ -143,168 +143,185 @@ export default function UmkmProfileComposite() {
             </p>
           </div>
 
-        <Card className="border shadow-none">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Store className="w-4 h-4 sm:w-5 sm:h-5" />
-              Informasi UMKM
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Perbarui informasi bisnis UMKM Anda agar lebih mudah ditemukan
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            {isLoading ? (
-              <div className="space-y-5 sm:space-y-6">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <Skeleton className="h-16 w-16 sm:h-20 sm:w-20 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-8 sm:h-9 w-24 sm:w-28" />
-                    <Skeleton className="h-3 sm:h-4 w-32 sm:w-40" />
+          <Card className="border shadow-none">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                Informasi UMKM
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Perbarui informasi bisnis UMKM Anda agar lebih mudah ditemukan
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0">
+              {isLoading ? (
+                <div className="space-y-5 sm:space-y-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <Skeleton className="h-16 w-16 sm:h-20 sm:w-20 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 sm:h-9 w-24 sm:w-28" />
+                      <Skeleton className="h-3 sm:h-4 w-32 sm:w-40" />
+                    </div>
                   </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                    <Skeleton className="h-9 sm:h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                    <Skeleton className="h-9 sm:h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                    <Skeleton className="h-9 sm:h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
+                    <Skeleton className="h-28 sm:h-32 w-full" />
+                  </div>
+                  <Skeleton className="h-9 sm:h-10 w-32 sm:w-40" />
                 </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
-                  <Skeleton className="h-9 sm:h-10 w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
-                  <Skeleton className="h-9 sm:h-10 w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
-                  <Skeleton className="h-9 sm:h-10 w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-3 sm:h-4 w-20 sm:w-24" />
-                  <Skeleton className="h-28 sm:h-32 w-full" />
-                </div>
-                <Skeleton className="h-9 sm:h-10 w-32 sm:w-40" />
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
-                    <AvatarImage src={logoPreview || ""} alt="Logo UMKM" />
-                    <AvatarFallback className="bg-green-50 border-2 border-dashed border-green-200">
-                      <Store className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <input
-                      type="file"
-                      ref={logoInputRef}
-                      onChange={handleLogoChange}
-                      accept="image/jpeg,image/png,image/gif,image/webp"
-                      className="hidden"
+              ) : (
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-5 sm:space-y-6"
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                      <AvatarImage src={logoPreview || ""} alt="Logo UMKM" />
+                      <AvatarFallback className="bg-green-50 border-2 border-dashed border-green-200">
+                        <Store className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <input
+                        type="file"
+                        ref={logoInputRef}
+                        onChange={handleLogoChange}
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="text-xs sm:text-sm"
+                      >
+                        <Camera className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                        Upload Logo
+                      </Button>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                        JPEG, PNG, GIF, WebP. Maks 1MB
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="umkmName" className="text-xs sm:text-sm">
+                      <Store className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+                      Nama UMKM
+                    </Label>
+                    <Input
+                      id="umkmName"
+                      placeholder="Nama bisnis Anda"
+                      value={umkmData.umkmName}
+                      onChange={(e) =>
+                        setUmkmData({ ...umkmData, umkmName: e.target.value })
+                      }
+                      className="border text-sm"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => logoInputRef.current?.click()}
+                  </div>
+
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label
+                      htmlFor="umkmCategory"
                       className="text-xs sm:text-sm"
                     >
-                      <Camera className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                      Upload Logo
-                    </Button>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                      JPEG, PNG, GIF, WebP. Maks 1MB
-                    </p>
+                      Kategori UMKM
+                    </Label>
+                    <Select
+                      value={umkmData.umkmCategory || undefined}
+                      onValueChange={(value) =>
+                        setUmkmData({ ...umkmData, umkmCategory: value })
+                      }
+                    >
+                      <SelectTrigger className="border w-full text-sm">
+                        <SelectValue placeholder="Pilih kategori" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[
+                          ...new Set([
+                            ...UMKM_CATEGORIES,
+                            ...(umkmData.umkmCategory &&
+                            !UMKM_CATEGORIES.includes(umkmData.umkmCategory)
+                              ? [umkmData.umkmCategory]
+                              : []),
+                          ]),
+                        ].map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label htmlFor="umkmName" className="text-xs sm:text-sm">
-                    <Store className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
-                    Nama UMKM
-                  </Label>
-                  <Input
-                    id="umkmName"
-                    placeholder="Nama bisnis Anda"
-                    value={umkmData.umkmName}
-                    onChange={(e) =>
-                      setUmkmData({ ...umkmData, umkmName: e.target.value })
-                    }
-                    className="border text-sm"
-                  />
-                </div>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="umkmAddress" className="text-xs sm:text-sm">
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+                      Alamat UMKM
+                    </Label>
+                    <Input
+                      id="umkmAddress"
+                      placeholder="Alamat lengkap bisnis Anda"
+                      value={umkmData.umkmAddress}
+                      onChange={(e) =>
+                        setUmkmData({
+                          ...umkmData,
+                          umkmAddress: e.target.value,
+                        })
+                      }
+                      className="border text-sm"
+                    />
+                  </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label htmlFor="umkmCategory" className="text-xs sm:text-sm">
-                    Kategori UMKM
-                  </Label>
-                  <Select
-                    value={umkmData.umkmCategory}
-                    onValueChange={(value) =>
-                      setUmkmData({ ...umkmData, umkmCategory: value })
-                    }
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label
+                      htmlFor="umkmDescription"
+                      className="text-xs sm:text-sm"
+                    >
+                      <FileText className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+                      Deskripsi UMKM
+                    </Label>
+                    <Textarea
+                      id="umkmDescription"
+                      placeholder="Ceritakan tentang bisnis Anda, produk yang dijual, dll."
+                      value={umkmData.umkmDescription}
+                      onChange={(e) =>
+                        setUmkmData({
+                          ...umkmData,
+                          umkmDescription: e.target.value,
+                        })
+                      }
+                      className="border min-h-[100px] sm:min-h-[120px] text-sm"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700 text-sm"
+                    disabled={isUpdating}
                   >
-                    <SelectTrigger className="border w-full text-sm">
-                      <SelectValue placeholder="Pilih kategori" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UMKM_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label htmlFor="umkmAddress" className="text-xs sm:text-sm">
-                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
-                    Alamat UMKM
-                  </Label>
-                  <Input
-                    id="umkmAddress"
-                    placeholder="Alamat lengkap bisnis Anda"
-                    value={umkmData.umkmAddress}
-                    onChange={(e) =>
-                      setUmkmData({ ...umkmData, umkmAddress: e.target.value })
-                    }
-                    className="border text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label
-                    htmlFor="umkmDescription"
-                    className="text-xs sm:text-sm"
-                  >
-                    <FileText className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
-                    Deskripsi UMKM
-                  </Label>
-                  <Textarea
-                    id="umkmDescription"
-                    placeholder="Ceritakan tentang bisnis Anda, produk yang dijual, dll."
-                    value={umkmData.umkmDescription}
-                    onChange={(e) =>
-                      setUmkmData({
-                        ...umkmData,
-                        umkmDescription: e.target.value,
-                      })
-                    }
-                    className="border min-h-[100px] sm:min-h-[120px] text-sm"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-sm"
-                  disabled={isUpdating}
-                >
-                  <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  Simpan Perubahan
-                </Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                    Simpan Perubahan
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
     </>
   );
 }
