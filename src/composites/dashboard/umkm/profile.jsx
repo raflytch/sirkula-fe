@@ -241,6 +241,7 @@ export default function UmkmProfileComposite() {
                       Kategori UMKM
                     </Label>
                     <Select
+                      key={session?.umkmCategory}
                       value={umkmData.umkmCategory || undefined}
                       onValueChange={(value) =>
                         setUmkmData({ ...umkmData, umkmCategory: value })
