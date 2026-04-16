@@ -90,8 +90,12 @@ export default function SirkulaGreenActionComposite() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { data: session } = useSession();
-  const { validateFile, showFileSizeDialog, setShowFileSizeDialog } =
-    useFileValidation();
+  const {
+    validateFile,
+    showFileSizeDialog,
+    setShowFileSizeDialog,
+    fileSizeLimit,
+  } = useFileValidation();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
@@ -162,16 +166,16 @@ export default function SirkulaGreenActionComposite() {
     if (!selectedLocation) return;
     if (!formData.quantity || Number(formData.quantity) <= 0) return;
 
-    const submitData = new FormData();
-    submitData.append("category", formData.category);
-    submitData.append("subCategory", formData.subCategory);
-    submitData.append("description", formData.description);
-    submitData.append("quantity", formData.quantity);
-    if (formData.actionType)
-      submitData.append("actionType", formData.actionType);
-    submitData.append("latitude", selectedLocation.lat);
-    submitData.append("longitude", selectedLocation.lng);
-    submitData.append("media", formData.media);
+    const submitData = {
+      file: formData.media,
+      category: formData.category,
+      subCategory: formData.subCategory,
+      description: formData.description,
+      quantity: formData.quantity,
+      latitude: selectedLocation.lat,
+      longitude: selectedLocation.lng,
+    };
+    if (formData.actionType) submitData.actionType = formData.actionType;
 
     createMutation.mutate(submitData, {
       onSuccess: (data) => {
@@ -240,6 +244,7 @@ export default function SirkulaGreenActionComposite() {
       <FileSizeAlertDialog
         open={showFileSizeDialog}
         onOpenChange={setShowFileSizeDialog}
+        maxSize={fileSizeLimit}
       />
 
       <Dialog open={showForm} onOpenChange={handleOpenChange}>
@@ -423,13 +428,13 @@ export default function SirkulaGreenActionComposite() {
               <Label htmlFor="media" className="text-sm font-medium">
                 Upload Media (Gambar/Video) *{" "}
                 <span className="text-xs text-muted-foreground">
-                  (Maks. 1MB)
+                  (Gambar maks. 1MB, Video maks. 10MB)
                 </span>
               </Label>
               <Input
                 id="media"
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*,video/mp4,video/webm,video/quicktime"
                 onChange={handleMediaChange}
                 required
                 className="h-11 border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"

@@ -1,4 +1,5 @@
 import httpClient from "@/lib/http-client";
+import { submitGreenActionWithChunkedUpload } from "@/lib/chunked-upload";
 
 export const greenActionService = {
   getCategories: async () => {
@@ -8,13 +9,19 @@ export const greenActionService = {
     return response.data;
   },
 
-  createGreenAction: async (formData) => {
-    const response = await httpClient.post("/green-actions", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
+  createGreenAction: async ({ file, ...actionData }) => {
+    const formData = new FormData();
+    formData.append("category", actionData.category);
+    formData.append("subCategory", actionData.subCategory);
+    formData.append("quantity", String(actionData.quantity));
+    formData.append("latitude", String(actionData.latitude));
+    formData.append("longitude", String(actionData.longitude));
+    if (actionData.description)
+      formData.append("description", actionData.description);
+    if (actionData.actionType)
+      formData.append("actionType", actionData.actionType);
+
+    return submitGreenActionWithChunkedUpload(file, formData);
   },
 
   getMyGreenActions: async (params = {}) => {

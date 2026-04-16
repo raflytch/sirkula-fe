@@ -12,7 +12,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB for images
+const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB for videos
+
+const VIDEO_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime", // .mov
+];
+
+function isVideoFile(file) {
+  return file?.type?.startsWith("video/");
+}
 
 function formatFileSize(bytes) {
   if (bytes < 1024) return `${bytes}B`;
@@ -20,7 +31,7 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
 }
 
-export function FileSizeAlertDialog({ open, onOpenChange }) {
+export function FileSizeAlertDialog({ open, onOpenChange, maxSize }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -31,9 +42,9 @@ export function FileSizeAlertDialog({ open, onOpenChange }) {
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm">
             File yang Anda pilih melebihi batas maksimal{" "}
-            <strong>{formatFileSize(MAX_FILE_SIZE)}</strong>. Silakan pilih file
-            dengan ukuran yang lebih kecil atau kompres file Anda terlebih
-            dahulu.
+            <strong>{formatFileSize(maxSize || MAX_IMAGE_SIZE)}</strong>.
+            Silakan pilih file dengan ukuran yang lebih kecil atau kompres file
+            Anda terlebih dahulu.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -48,9 +59,15 @@ export function FileSizeAlertDialog({ open, onOpenChange }) {
 
 export function useFileValidation() {
   const [showFileSizeDialog, setShowFileSizeDialog] = useState(false);
+  const [fileSizeLimit, setFileSizeLimit] = useState(MAX_IMAGE_SIZE);
 
   const validateFile = useCallback((file) => {
-    if (file && file.size > MAX_FILE_SIZE) {
+    if (!file) return true;
+
+    const maxSize = isVideoFile(file) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+
+    if (file.size > maxSize) {
+      setFileSizeLimit(maxSize);
       setShowFileSizeDialog(true);
       return false;
     }
@@ -61,7 +78,10 @@ export function useFileValidation() {
     validateFile,
     showFileSizeDialog,
     setShowFileSizeDialog,
-    maxFileSize: MAX_FILE_SIZE,
-    maxFileSizeLabel: formatFileSize(MAX_FILE_SIZE),
+    fileSizeLimit,
+    maxImageSize: MAX_IMAGE_SIZE,
+    maxVideoSize: MAX_VIDEO_SIZE,
+    maxImageSizeLabel: formatFileSize(MAX_IMAGE_SIZE),
+    maxVideoSizeLabel: formatFileSize(MAX_VIDEO_SIZE),
   };
 }
