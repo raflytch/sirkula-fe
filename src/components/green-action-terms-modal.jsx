@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 
 const TERMS_STORAGE_KEY = "sirkula-ga-terms";
-const TERMS_DURATION = 24 * 60 * 60 * 1000; // 24 jam
+const TERMS_DURATION_LONG = 24 * 60 * 60 * 1000;
+const TERMS_DURATION_SHORT = 2 * 60 * 60 * 1000;
 
 function getTermsAccepted(userId) {
   try {
@@ -33,7 +34,8 @@ function getTermsAccepted(userId) {
     const data = JSON.parse(raw);
     const entry = data[userId];
     if (!entry) return false;
-    if (Date.now() - entry.timestamp > TERMS_DURATION) {
+    const duration = entry.duration ?? TERMS_DURATION_LONG;
+    if (Date.now() - entry.timestamp > duration) {
       delete data[userId];
       localStorage.setItem(TERMS_STORAGE_KEY, JSON.stringify(data));
       return false;
@@ -44,11 +46,11 @@ function getTermsAccepted(userId) {
   }
 }
 
-function setTermsAccepted(userId) {
+function setTermsAccepted(userId, duration) {
   try {
     const raw = localStorage.getItem(TERMS_STORAGE_KEY);
     const data = raw ? JSON.parse(raw) : {};
-    data[userId] = { timestamp: Date.now() };
+    data[userId] = { timestamp: Date.now(), duration };
     localStorage.setItem(TERMS_STORAGE_KEY, JSON.stringify(data));
   } catch {}
 }
@@ -126,9 +128,8 @@ export default function GreenActionTermsModal({ userId, onAccept }) {
   }, [userId]);
 
   const handleAccept = () => {
-    if (dontShowAgain) {
-      setTermsAccepted(userId);
-    }
+    const duration = dontShowAgain ? TERMS_DURATION_LONG : TERMS_DURATION_SHORT;
+    setTermsAccepted(userId, duration);
     setOpen(false);
     onAccept?.();
   };
