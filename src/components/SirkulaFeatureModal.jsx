@@ -117,17 +117,17 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl max-w-[calc(100%-1rem)] p-0 border-0 overflow-hidden gap-0 bg-transparent shadow-none [&>button]:text-white/80 [&>button]:hover:text-white [&>button]:data-[state=open]:bg-white/10">
+      <DialogContent className="sm:max-w-5xl max-w-[calc(100%-1rem)] max-h-[72vh] sm:max-h-[70vh] p-0 border-0 overflow-hidden gap-0 bg-transparent shadow-none [&>button]:text-white/80 [&>button]:hover:text-white [&>button]:data-[state=open]:bg-white/10">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-3xl border border-emerald-200/70 bg-white shadow-2xl"
+          className="relative flex h-full max-h-full flex-col overflow-hidden rounded-3xl border border-emerald-200/70 bg-white shadow-2xl"
         >
           <div className="pointer-events-none absolute -top-24 -right-20 h-64 w-64 rounded-full bg-emerald-300/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-teal-300/20 blur-3xl" />
 
-          <DialogHeader className="relative px-5 sm:px-7 pt-5 pb-5 bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white">
+          <DialogHeader className="relative px-4 sm:px-7 pt-4 pb-4 sm:pt-5 sm:pb-4 bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white">
             <Badge className="w-fit mb-3 bg-white/20 text-white border-white/30 hover:bg-white/20">
               <Leaf className="h-3.5 w-3.5 mr-1" />
               Kenali Sirkula Lebih Dekat
@@ -142,7 +142,22 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
               kontribusi pertamamu sekarang juga.
             </DialogDescription>
 
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="mt-3 flex flex-wrap gap-1.5 sm:hidden">
+              {featureCards.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={`mobile-${feature.title}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/15 px-2 py-1 text-[11px] font-medium"
+                  >
+                    <Icon className="h-3 w-3" />
+                    <span>{feature.title}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
               {featureCards.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
@@ -151,7 +166,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.06 * index + 0.1, duration: 0.25 }}
-                    className="rounded-xl border border-white/25 bg-white/10 backdrop-blur-sm px-2.5 py-2"
+                    className="rounded-xl border border-white/25 bg-white/10 backdrop-blur-sm px-2.5 py-1.5"
                   >
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-md bg-white/20 flex items-center justify-center">
@@ -167,9 +182,9 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
             </div>
           </DialogHeader>
 
-          <div className="relative max-h-[68vh] overflow-y-auto px-4 sm:px-6 lg:px-7 py-5 space-y-4 bg-linear-to-b from-white via-emerald-50/30 to-white">
-            <div className="rounded-2xl border border-emerald-100 bg-white/90 p-3 sm:p-4 shadow-sm">
-              <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="relative flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-7 py-4 space-y-3.5 bg-linear-to-b from-white via-emerald-50/30 to-white">
+            <div className="rounded-2xl border border-emerald-100 bg-white/90 p-3 sm:p-3.5 shadow-sm">
+              <div className="flex items-center justify-between gap-3 mb-2.5">
                 <div>
                   <p className="text-base sm:text-lg font-semibold text-slate-900">
                     Cara Penggunaan (1-2-3)
@@ -189,7 +204,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-3.5">
+              <div className="grid grid-cols-3 gap-2 mt-3">
                 {steps.map((step, index) => {
                   const isActive = index === activeStep;
 
@@ -214,7 +229,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                 })}
               </div>
 
-              <div className="mt-3.5 grid lg:grid-cols-[1fr_1.35fr] gap-3">
+              <div className="mt-3 grid lg:grid-cols-[1fr_1.35fr] gap-3">
                 <div className="rounded-2xl border border-slate-200 bg-white p-3 space-y-2">
                   {steps.map((step, index) => {
                     const StepIcon = step.icon;
@@ -320,7 +335,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                 </div>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-4">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-3.5">
                 <Button
                   type="button"
                   variant="outline"
