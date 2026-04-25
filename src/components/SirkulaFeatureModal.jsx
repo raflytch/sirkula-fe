@@ -108,8 +108,8 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-w-[calc(100%-1.5rem)] p-0 border-0 overflow-hidden gap-0">
-        <DialogHeader className="px-5 sm:px-7 pt-6 pb-5 bg-linear-to-br from-emerald-600 via-emerald-500 to-teal-500 text-white">
+      <DialogContent className="sm:max-w-4xl max-w-[calc(100%-1rem)] p-0 border-0 overflow-hidden gap-0 rounded-3xl shadow-2xl">
+        <DialogHeader className="px-5 sm:px-7 pt-5 pb-4 bg-linear-to-br from-emerald-600 via-emerald-500 to-teal-500 text-white">
           <Badge className="w-fit mb-3 bg-white/20 text-white border-white/30 hover:bg-white/20">
             <Leaf className="h-3.5 w-3.5 mr-1" />
             Kenali Sirkula Lebih Dekat
@@ -123,22 +123,22 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[75vh] overflow-y-auto px-5 sm:px-7 py-5 sm:py-6 space-y-6 bg-white">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="max-h-[65vh] overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 bg-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
             {featureCards.map((feature) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={feature.title}
                   className={cn(
-                    "rounded-xl border p-3.5 bg-linear-to-br",
+                    "rounded-2xl border p-3 bg-linear-to-br",
                     feature.tone,
                   )}
                 >
-                  <div className="h-9 w-9 rounded-lg bg-white/70 flex items-center justify-center mb-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-white/70 flex items-center justify-center mb-2">
                     <Icon className="h-4.5 w-4.5" />
                   </div>
-                  <p className="text-sm font-semibold mb-1 leading-snug">
+                  <p className="text-[13px] sm:text-sm font-semibold mb-1 leading-snug">
                     {feature.title}
                   </p>
                   <p className="text-xs leading-relaxed text-black/70">
@@ -149,7 +149,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
             })}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-base sm:text-lg font-semibold text-slate-900">
@@ -162,7 +162,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
               <Recycle className="h-5 w-5 text-emerald-600 shrink-0" />
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="grid grid-cols-3 gap-2 mt-3.5">
               {steps.map((step, index) => (
                 <Button
                   key={step.id}
@@ -170,7 +170,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                   variant="outline"
                   onClick={() => setActiveStep(index)}
                   className={cn(
-                    "h-auto py-2.5 px-2 border-slate-300",
+                    "h-auto py-2 px-1.5 border-slate-300 rounded-xl",
                     index === activeStep &&
                       "border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
                   )}
@@ -182,8 +182,8 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
               ))}
             </div>
 
-            <div className="mt-4 grid lg:grid-cols-[0.95fr_1.25fr] gap-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2.5">
+            <div className="mt-3.5 grid lg:grid-cols-[0.95fr_1.25fr] gap-3">
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 space-y-2">
                 {steps.map((step, index) => {
                   const StepIcon = step.icon;
                   const isActive = index === activeStep;
@@ -191,7 +191,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                     <div
                       key={step.id}
                       className={cn(
-                        "rounded-lg border px-3 py-2.5 transition-colors",
+                        "rounded-xl border px-3 py-2 transition-colors",
                         isActive
                           ? "border-emerald-300 bg-emerald-50"
                           : "border-slate-200 bg-white",
@@ -222,7 +222,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                 })}
               </div>
 
-              <div className="rounded-xl border border-emerald-200 bg-linear-to-br from-white to-emerald-50 p-4">
+              <div className="rounded-2xl border border-emerald-200 bg-linear-to-br from-white to-emerald-50 p-3.5">
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
                     <SelectedStepIcon className="h-4.5 w-4.5" />
@@ -241,7 +241,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
                   {selectedStep?.description}
                 </p>
 
-                <Separator className="my-3.5" />
+                <Separator className="my-3" />
 
                 <div className="space-y-2">
                   {selectedStep?.highlights?.map((item) => (
@@ -257,7 +257,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
               </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-4">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 mt-3.5">
               <Button
                 type="button"
                 variant="outline"

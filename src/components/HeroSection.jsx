@@ -79,7 +79,7 @@ const HeroSection = ({ onOpenGuide }) => {
                 className="border-2 border-emerald-500 text-emerald-700 bg-white hover:bg-emerald-50 hover:border-emerald-600 px-6 sm:px-8 h-11 sm:h-12 text-sm sm:text-base font-medium transition-all w-full sm:w-auto"
               >
                 <Play className="w-4 h-4 mr-2" />
-                Lihat Demo
+                Panduan Sirkula
               </Button>
             </div>
           </div>

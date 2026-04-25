@@ -50,6 +50,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import FullscreenLoader from "@/components/ui/fullscreen-loader";
 import {
   Plus,
   Upload,
@@ -238,6 +239,10 @@ export default function SirkulaGreenActionComposite() {
   };
 
   const handleOpenChange = (open) => {
+    if (createMutation.isPending) {
+      return;
+    }
+
     if (!open) {
       resetForm();
     }
@@ -281,6 +286,10 @@ export default function SirkulaGreenActionComposite() {
   return (
     <>
       {session?.id && <GreenActionTermsModal userId={session.id} />}
+
+      {createMutation.isPending && (
+        <FullscreenLoader text="Sedang mengunggah aksi hijau Anda, mohon tunggu..." />
+      )}
 
       <FileSizeAlertDialog
         open={showFileSizeDialog}
