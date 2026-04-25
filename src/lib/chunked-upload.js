@@ -1,7 +1,16 @@
 import httpClient from "@/lib/http-client";
+import {
+  CHUNK_UPLOAD_MAX_RETRY,
+  VIDEO_CHUNK_SIZE,
+  resolveMediaUploadStrategy,
+} from "@/lib/green-action-media-rules";
 
-const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB per chunk
-const DIRECT_UPLOAD_THRESHOLD = 1.5 * 1024 * 1024; // 1.5MB
+function appendActionFieldsToFormData(formData, actionData) {
+  Object.entries(actionData).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    formData.append(key, String(value));
+  });
+}
 
 /**
  * Convert Blob to raw base64 string (no data URI prefix)
@@ -18,72 +27,105 @@ function blobToBase64(blob) {
   });
 }
 
-/**
- * Direct upload for small files (<= 1.5MB)
- */
-async function directUpload(formData) {
-  const response = await httpClient.post("/green-actions", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+async function directUpload(file, actionData) {
+  const formData = new FormData();
+  appendActionFieldsToFormData(formData, actionData);
+  formData.append("media", file);
+
+  const response = await httpClient.post("/green-actions", formData);
+
   return response.data;
 }
 
-/**
- * Upload file in chunks, then submit the green action.
- * Files <= 1.5MB use direct multipart upload.
- * Files > 1.5MB are split into 1MB base64 chunks.
- *
- * @param {File} file - The media file to upload
- * @param {FormData} actionFormData - FormData with action fields (category, subCategory, etc.)
- * @returns {Promise<object>} API response data
- */
-export async function submitGreenActionWithChunkedUpload(file, actionFormData) {
-  // Small file: direct multipart upload (no chunking needed)
-  if (file.size <= DIRECT_UPLOAD_THRESHOLD) {
-    actionFormData.append("media", file);
-    return directUpload(actionFormData);
+async function initChunkedUpload(file, totalChunks) {
+  const response = await httpClient.post("/green-actions/upload/init", {
+    fileName: file.name,
+    mimeType: file.type,
+    totalSize: file.size,
+    totalChunks,
+  });
+
+  const uploadId = response.data?.data?.uploadId || response.data?.uploadId;
+
+  if (!uploadId) {
+    throw new Error("Gagal memulai sesi upload video.");
   }
 
-  // Step 1: Init chunked upload session
-  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  return uploadId;
+}
 
-  const { data: initRes } = await httpClient.post(
-    "/green-actions/upload/init",
-    {
-      fileName: file.name,
-      mimeType: file.type,
-      totalSize: file.size,
-      totalChunks,
-    },
-  );
+async function uploadChunkWithRetry({ uploadId, chunkIndex, data }) {
+  let attempt = 0;
 
-  const uploadId = initRes.data.uploadId;
+  while (attempt <= CHUNK_UPLOAD_MAX_RETRY) {
+    try {
+      await httpClient.post("/green-actions/upload/chunk", {
+        uploadId,
+        chunkIndex,
+        data,
+      });
+      return;
+    } catch (error) {
+      if (attempt === CHUNK_UPLOAD_MAX_RETRY) {
+        throw error;
+      }
+      attempt += 1;
+    }
+  }
+}
 
-  // Step 2: Send chunks sequentially
+export async function submitGreenActionWithChunkedUpload({
+  file,
+  actionData,
+  onChunkProgress,
+}) {
+  const uploadStrategy = resolveMediaUploadStrategy(file);
+
+  if (!uploadStrategy.isValid) {
+    throw new Error(uploadStrategy.message);
+  }
+
+  if (uploadStrategy.mode === "direct") {
+    return directUpload(file, actionData);
+  }
+
+  const totalChunks = Math.ceil(file.size / VIDEO_CHUNK_SIZE);
+  const uploadId = await initChunkedUpload(file, totalChunks);
+
+  onChunkProgress?.({
+    uploadedChunks: 0,
+    totalChunks,
+    percent: 0,
+  });
+
   for (let i = 0; i < totalChunks; i++) {
-    const start = i * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const start = i * VIDEO_CHUNK_SIZE;
+    const end = Math.min(start + VIDEO_CHUNK_SIZE, file.size);
     const blob = file.slice(start, end);
-
     const base64 = await blobToBase64(blob);
 
-    await httpClient.post("/green-actions/upload/chunk", {
+    await uploadChunkWithRetry({
       uploadId,
       chunkIndex: i,
       data: base64,
     });
+
+    const uploadedChunks = i + 1;
+    const percent = Math.round((uploadedChunks / totalChunks) * 100);
+
+    onChunkProgress?.({
+      uploadedChunks,
+      totalChunks,
+      percent,
+    });
   }
 
-  // Step 3: Submit green action with mediaUploadId
-  actionFormData.append("mediaUploadId", uploadId);
+  const chunkedPayload = {
+    ...actionData,
+    mediaUploadId: uploadId,
+  };
 
-  const { data: result } = await httpClient.post(
-    "/green-actions",
-    actionFormData,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    },
-  );
+  const response = await httpClient.post("/green-actions", chunkedPayload);
 
-  return result;
+  return response.data;
 }

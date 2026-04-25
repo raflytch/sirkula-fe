@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import dynamic from "next/dynamic";
@@ -49,7 +49,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import FullscreenLoader from "@/components/ui/fullscreen-loader";
+import { Progress } from "@/components/ui/progress";
 import {
   Plus,
   Upload,
@@ -70,12 +70,17 @@ import {
   BarChart3,
   Leaf,
   Globe,
+  Loader2,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SparklesText } from "@/components/ui/sparkles-text";
 import { AuroraText } from "@/components/ui/aurora-text";
 import GreenActionResultModal from "@/components/green-action-result-modal";
 import GreenActionTermsModal from "@/components/green-action-terms-modal";
+import {
+  VIDEO_CHUNK_SIZE,
+  resolveMediaUploadStrategy,
+} from "@/lib/green-action-media-rules";
 
 const Map = dynamic(() => import("@/components/map"), { ssr: false });
 
@@ -95,6 +100,9 @@ export default function SirkulaGreenActionComposite() {
     showFileSizeDialog,
     setShowFileSizeDialog,
     fileSizeLimit,
+    fileSizeMessage,
+    maxImageSizeLabel,
+    maxVideoSizeLabel,
   } = useFileValidation();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -110,6 +118,7 @@ export default function SirkulaGreenActionComposite() {
   const [actionResult, setActionResult] = useState(null);
   const [showResultModal, setShowResultModal] = useState(false);
   const [pendingRedirectId, setPendingRedirectId] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(null);
 
   const { data: categoriesData, isLoading: categoriesLoading } =
     useGreenActionCategories();
@@ -157,6 +166,7 @@ export default function SirkulaGreenActionComposite() {
     });
     setLocation(null);
     setMediaPreview(null);
+    setUploadProgress(null);
     dispatch(resetGreenActionForm());
   };
 
@@ -165,6 +175,29 @@ export default function SirkulaGreenActionComposite() {
 
     if (!selectedLocation) return;
     if (!formData.quantity || Number(formData.quantity) <= 0) return;
+
+    const uploadStrategy = resolveMediaUploadStrategy(formData.media);
+    if (!uploadStrategy.isValid) {
+      setActionResult({
+        type: "ERROR",
+        message: uploadStrategy.message,
+        errorType: "ValidationError",
+      });
+      setShowResultModal(true);
+      return;
+    }
+
+    const initialTotalChunks =
+      uploadStrategy.mode === "chunked-video"
+        ? Math.ceil(formData.media.size / VIDEO_CHUNK_SIZE)
+        : 0;
+
+    setUploadProgress({
+      mode: uploadStrategy.mode,
+      uploadedChunks: 0,
+      totalChunks: initialTotalChunks,
+      percent: 0,
+    });
 
     const submitData = {
       file: formData.media,
@@ -177,10 +210,21 @@ export default function SirkulaGreenActionComposite() {
     };
     if (formData.actionType) submitData.actionType = formData.actionType;
 
+    if (uploadStrategy.mode === "chunked-video") {
+      submitData.onChunkProgress = (progress) => {
+        setUploadProgress((previous) => ({
+          ...previous,
+          mode: "chunked-video",
+          ...progress,
+        }));
+      };
+    }
+
     createMutation.mutate(submitData, {
       onSuccess: (data) => {
         setShowForm(false);
         resetForm();
+        setUploadProgress(null);
         if (data?.data?.id && data.data.status !== "REJECTED") {
           setPendingRedirectId(data.data.id);
         }
@@ -188,6 +232,7 @@ export default function SirkulaGreenActionComposite() {
       onError: () => {
         setShowForm(false);
         resetForm();
+        setUploadProgress(null);
       },
     });
   };
@@ -233,10 +278,6 @@ export default function SirkulaGreenActionComposite() {
     }
   };
 
-  if (createMutation.isPending) {
-    return <FullscreenLoader text="Mengirimkan aksi hijau Anda..." />;
-  }
-
   return (
     <>
       {session?.id && <GreenActionTermsModal userId={session.id} />}
@@ -245,6 +286,7 @@ export default function SirkulaGreenActionComposite() {
         open={showFileSizeDialog}
         onOpenChange={setShowFileSizeDialog}
         maxSize={fileSizeLimit}
+        message={fileSizeMessage}
       />
 
       <Dialog open={showForm} onOpenChange={handleOpenChange}>
@@ -428,7 +470,7 @@ export default function SirkulaGreenActionComposite() {
               <Label htmlFor="media" className="text-sm font-medium">
                 Upload Media (Gambar/Video) *{" "}
                 <span className="text-xs text-muted-foreground">
-                  (Gambar maks. 1MB, Video maks. 10MB)
+                  {`(Gambar maks. ${maxImageSizeLabel}, Video maks. ${maxVideoSizeLabel}. Video di atas ${maxImageSizeLabel} akan diunggah per chunk 512 KB)`}
                 </span>
               </Label>
               <Input
@@ -471,6 +513,28 @@ export default function SirkulaGreenActionComposite() {
               )}
             </div>
 
+            {createMutation.isPending &&
+              uploadProgress?.mode === "chunked-video" && (
+                <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
+                    <span className="font-medium text-emerald-800">
+                      Upload video bertahap
+                    </span>
+                    <span className="font-semibold text-emerald-700">
+                      {uploadProgress.percent || 0}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={uploadProgress.percent || 0}
+                    className="h-2"
+                  />
+                  <p className="text-xs text-emerald-700">
+                    Chunk {uploadProgress.uploadedChunks || 0} dari{" "}
+                    {uploadProgress.totalChunks || 0}
+                  </p>
+                </div>
+              )}
+
             <Button
               type="submit"
               className="w-full gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-medium"
@@ -480,11 +544,23 @@ export default function SirkulaGreenActionComposite() {
                 !formData.category ||
                 !formData.subCategory ||
                 !formData.quantity ||
-                Number(formData.quantity) <= 0
+                Number(formData.quantity) <= 0 ||
+                createMutation.isPending
               }
             >
-              <Upload className="h-5 w-5" />
-              Kirim Aksi Hijau
+              {createMutation.isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  {uploadProgress?.mode === "chunked-video"
+                    ? `Mengunggah ${uploadProgress.percent || 0}%`
+                    : "Mengirim Aksi Hijau..."}
+                </>
+              ) : (
+                <>
+                  <Upload className="h-5 w-5" />
+                  Kirim Aksi Hijau
+                </>
+              )}
             </Button>
           </form>
         </DialogContent>

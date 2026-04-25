@@ -7,7 +7,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-const HeroSection = ({ onOpenVideo }) => {
+const HeroSection = ({ onOpenGuide }) => {
   const [isVisible, heroRef] = useScrollAnimation();
   const router = useRouter();
 
@@ -75,7 +75,7 @@ const HeroSection = ({ onOpenVideo }) => {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={onOpenVideo}
+                onClick={onOpenGuide}
                 className="border-2 border-emerald-500 text-emerald-700 bg-white hover:bg-emerald-50 hover:border-emerald-600 px-6 sm:px-8 h-11 sm:h-12 text-sm sm:text-base font-medium transition-all w-full sm:w-auto"
               >
                 <Play className="w-4 h-4 mr-2" />

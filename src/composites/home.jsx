@@ -11,16 +11,15 @@ import AboutUsSection from "@/components/AboutUsSection";
 import QuizSection from "@/components/QuizSection";
 import ImpactSection from "@/components/ImpactSection";
 import FAQ from "@/components/FAQ";
-import VideoModal from "@/components/VideoModal";
-import { DEMO_VIDEO_URL } from "@/lib/constanst";
+import SirkulaFeatureModal from "@/components/SirkulaFeatureModal";
 
 export default function HomeComposite() {
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
       <BlurFade delay={0} inView>
-        <HeroSection onOpenVideo={() => setIsVideoOpen(true)} />
+        <HeroSection onOpenGuide={() => setIsGuideOpen(true)} />
       </BlurFade>
       <BlurFade delay={0.15} inView>
         <AboutUsSection id="aboutUsSection" />
@@ -47,11 +46,7 @@ export default function HomeComposite() {
         <CTAFooter />
       </BlurFade>
 
-      <VideoModal
-        isOpen={isVideoOpen}
-        onClose={() => setIsVideoOpen(false)}
-        videoSrc={DEMO_VIDEO_URL}
-      />
+      <SirkulaFeatureModal open={isGuideOpen} onOpenChange={setIsGuideOpen} />
     </div>
   );
 }

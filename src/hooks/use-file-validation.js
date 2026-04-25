@@ -11,27 +11,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DIRECT_UPLOAD_MAX_SIZE,
+  VIDEO_CHUNK_UPLOAD_MAX_SIZE,
+  formatFileSize,
+  resolveMediaUploadStrategy,
+} from "@/lib/green-action-media-rules";
 
-const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB for images
-const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB for videos
+const DEFAULT_ERROR_MESSAGE =
+  "Ukuran file tidak sesuai aturan upload. Silakan gunakan file lain.";
 
-const VIDEO_TYPES = [
-  "video/mp4",
-  "video/webm",
-  "video/quicktime", // .mov
-];
-
-function isVideoFile(file) {
-  return file?.type?.startsWith("video/");
-}
-
-function formatFileSize(bytes) {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
-}
-
-export function FileSizeAlertDialog({ open, onOpenChange, maxSize }) {
+export function FileSizeAlertDialog({ open, onOpenChange, maxSize, message }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -41,10 +31,13 @@ export function FileSizeAlertDialog({ open, onOpenChange, maxSize }) {
             Ukuran File Terlalu Besar
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm">
-            File yang Anda pilih melebihi batas maksimal{" "}
-            <strong>{formatFileSize(maxSize || MAX_IMAGE_SIZE)}</strong>.
-            Silakan pilih file dengan ukuran yang lebih kecil atau kompres file
-            Anda terlebih dahulu.
+            {message || DEFAULT_ERROR_MESSAGE}
+            {maxSize ? (
+              <>
+                {" "}
+                Batas maksimal: <strong>{formatFileSize(maxSize)}</strong>.
+              </>
+            ) : null}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -59,18 +52,21 @@ export function FileSizeAlertDialog({ open, onOpenChange, maxSize }) {
 
 export function useFileValidation() {
   const [showFileSizeDialog, setShowFileSizeDialog] = useState(false);
-  const [fileSizeLimit, setFileSizeLimit] = useState(MAX_IMAGE_SIZE);
+  const [fileSizeLimit, setFileSizeLimit] = useState(DIRECT_UPLOAD_MAX_SIZE);
+  const [fileSizeMessage, setFileSizeMessage] = useState("");
 
   const validateFile = useCallback((file) => {
     if (!file) return true;
 
-    const maxSize = isVideoFile(file) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+    const validation = resolveMediaUploadStrategy(file);
 
-    if (file.size > maxSize) {
-      setFileSizeLimit(maxSize);
+    if (!validation.isValid) {
+      setFileSizeLimit(validation.maxSize || DIRECT_UPLOAD_MAX_SIZE);
+      setFileSizeMessage(validation.message || DEFAULT_ERROR_MESSAGE);
       setShowFileSizeDialog(true);
       return false;
     }
+
     return true;
   }, []);
 
@@ -79,9 +75,10 @@ export function useFileValidation() {
     showFileSizeDialog,
     setShowFileSizeDialog,
     fileSizeLimit,
-    maxImageSize: MAX_IMAGE_SIZE,
-    maxVideoSize: MAX_VIDEO_SIZE,
-    maxImageSizeLabel: formatFileSize(MAX_IMAGE_SIZE),
-    maxVideoSizeLabel: formatFileSize(MAX_VIDEO_SIZE),
+    fileSizeMessage,
+    maxImageSize: DIRECT_UPLOAD_MAX_SIZE,
+    maxVideoSize: VIDEO_CHUNK_UPLOAD_MAX_SIZE,
+    maxImageSizeLabel: formatFileSize(DIRECT_UPLOAD_MAX_SIZE),
+    maxVideoSizeLabel: formatFileSize(VIDEO_CHUNK_UPLOAD_MAX_SIZE),
   };
 }

@@ -1,6 +1,26 @@
 import httpClient from "@/lib/http-client";
 import { submitGreenActionWithChunkedUpload } from "@/lib/chunked-upload";
 
+function buildGreenActionPayload(actionData) {
+  const payload = {
+    category: actionData.category,
+    subCategory: actionData.subCategory,
+    quantity: String(actionData.quantity),
+    latitude: String(actionData.latitude),
+    longitude: String(actionData.longitude),
+  };
+
+  if (actionData.description) {
+    payload.description = actionData.description;
+  }
+
+  if (actionData.actionType) {
+    payload.actionType = actionData.actionType;
+  }
+
+  return payload;
+}
+
 export const greenActionService = {
   getCategories: async () => {
     const response = await httpClient.get("/green-actions/categories", {
@@ -9,19 +29,14 @@ export const greenActionService = {
     return response.data;
   },
 
-  createGreenAction: async ({ file, ...actionData }) => {
-    const formData = new FormData();
-    formData.append("category", actionData.category);
-    formData.append("subCategory", actionData.subCategory);
-    formData.append("quantity", String(actionData.quantity));
-    formData.append("latitude", String(actionData.latitude));
-    formData.append("longitude", String(actionData.longitude));
-    if (actionData.description)
-      formData.append("description", actionData.description);
-    if (actionData.actionType)
-      formData.append("actionType", actionData.actionType);
+  createGreenAction: async ({ file, onChunkProgress, ...actionData }) => {
+    const payload = buildGreenActionPayload(actionData);
 
-    return submitGreenActionWithChunkedUpload(file, formData);
+    return submitGreenActionWithChunkedUpload({
+      file,
+      actionData: payload,
+      onChunkProgress,
+    });
   },
 
   getMyGreenActions: async (params = {}) => {
