@@ -117,12 +117,12 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl max-w-[calc(100%-1rem)] max-h-[72vh] sm:max-h-[70vh] p-0 border-0 overflow-hidden gap-0 bg-transparent shadow-none [&>button]:text-white/80 [&>button]:hover:text-white [&>button]:data-[state=open]:bg-white/10">
+      <DialogContent className="sm:max-w-5xl max-w-[calc(100%-1rem)] h-[72vh] sm:h-[70vh] p-0 border-0 overflow-hidden gap-0 bg-transparent shadow-none [&>button]:text-white/80 [&>button]:hover:text-white [&>button]:data-[state=open]:bg-white/10">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="relative flex h-full max-h-full flex-col overflow-hidden rounded-3xl border border-emerald-200/70 bg-white shadow-2xl"
+          className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-emerald-200/70 bg-white shadow-2xl"
         >
           <div className="pointer-events-none absolute -top-24 -right-20 h-64 w-64 rounded-full bg-emerald-300/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-teal-300/20 blur-3xl" />
@@ -182,7 +182,7 @@ export default function SirkulaFeatureModal({ open, onOpenChange }) {
             </div>
           </DialogHeader>
 
-          <div className="relative flex-1 overflow-y-auto px-3.5 sm:px-6 lg:px-7 py-4 space-y-3.5 bg-linear-to-b from-white via-emerald-50/30 to-white">
+          <div className="relative flex-1 min-h-0 overflow-y-auto px-3.5 sm:px-6 lg:px-7 py-4 space-y-3.5 bg-linear-to-b from-white via-emerald-50/30 to-white">
             <div className="rounded-2xl border border-emerald-100 bg-white/90 p-3 sm:p-3.5 shadow-sm">
               <div className="flex items-center justify-between gap-3 mb-2.5">
                 <div>
