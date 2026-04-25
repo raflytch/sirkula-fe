@@ -46,6 +46,16 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const HamburgerIcon = ({ isOpen }) => {
   return (
@@ -95,6 +105,7 @@ export const Navbar01 = React.forwardRef(
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
     const containerRef = useRef(null);
     const router = useRouter();
     const pathname = usePathname();
@@ -262,6 +273,7 @@ export const Navbar01 = React.forwardRef(
     };
 
     const handleLogout = () => {
+      setIsLogoutConfirmOpen(false);
       deleteCookie("token");
       dispatch(clearUser());
       queryClient.clear();
@@ -269,11 +281,15 @@ export const Navbar01 = React.forwardRef(
       router.push("/auth");
     };
 
+    const handleRequestLogout = () => {
+      setIsLogoutConfirmOpen(true);
+    };
+
     return (
       <div
         ref={combinedRef}
         className={cn(
-          "fixed top-0 inset-x-0 z-[9999] flex justify-center transition-all duration-300 ease-in-out",
+          "fixed top-0 inset-x-0 z-9999 flex justify-center transition-all duration-300 ease-in-out",
           isScrolled ? "pt-3" : "pt-0",
         )}
       >
@@ -583,7 +599,7 @@ export const Navbar01 = React.forwardRef(
 
                     <DropdownMenuItem
                       className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                      onClick={handleLogout}
+                      onClick={handleRequestLogout}
                     >
                       <div className="h-8 w-8 rounded-md bg-red-100 flex items-center justify-center">
                         <LogOut className="h-4 w-4 text-red-600" />
@@ -614,6 +630,33 @@ export const Navbar01 = React.forwardRef(
             )}
           </div>
         </header>
+
+        <AlertDialog
+          open={isLogoutConfirmOpen}
+          onOpenChange={setIsLogoutConfirmOpen}
+        >
+          <AlertDialogContent className="z-10000 rounded-2xl border-zinc-200">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Konfirmasi Logout</AlertDialogTitle>
+              <AlertDialogDescription>
+                Kamu yakin ingin keluar dari akun ini? Kamu perlu login lagi
+                untuk melanjutkan aktivitas.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-lg">
+                Batal
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="rounded-lg bg-red-600 text-white hover:bg-red-700"
+                onClick={handleLogout}
+              >
+                Ya, Keluar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   },
