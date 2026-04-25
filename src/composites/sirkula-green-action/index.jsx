@@ -49,7 +49,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
 import FullscreenLoader from "@/components/ui/fullscreen-loader";
 import {
   Plus,
@@ -78,10 +77,7 @@ import { SparklesText } from "@/components/ui/sparkles-text";
 import { AuroraText } from "@/components/ui/aurora-text";
 import GreenActionResultModal from "@/components/green-action-result-modal";
 import GreenActionTermsModal from "@/components/green-action-terms-modal";
-import {
-  VIDEO_CHUNK_SIZE,
-  resolveMediaUploadStrategy,
-} from "@/lib/green-action-media-rules";
+import { resolveMediaUploadStrategy } from "@/lib/green-action-media-rules";
 
 const Map = dynamic(() => import("@/components/map"), { ssr: false });
 
@@ -119,7 +115,6 @@ export default function SirkulaGreenActionComposite() {
   const [actionResult, setActionResult] = useState(null);
   const [showResultModal, setShowResultModal] = useState(false);
   const [pendingRedirectId, setPendingRedirectId] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(null);
 
   const { data: categoriesData, isLoading: categoriesLoading } =
     useGreenActionCategories();
@@ -167,7 +162,6 @@ export default function SirkulaGreenActionComposite() {
     });
     setLocation(null);
     setMediaPreview(null);
-    setUploadProgress(null);
     dispatch(resetGreenActionForm());
   };
 
@@ -188,18 +182,6 @@ export default function SirkulaGreenActionComposite() {
       return;
     }
 
-    const initialTotalChunks =
-      uploadStrategy.mode === "chunked-video"
-        ? Math.ceil(formData.media.size / VIDEO_CHUNK_SIZE)
-        : 0;
-
-    setUploadProgress({
-      mode: uploadStrategy.mode,
-      uploadedChunks: 0,
-      totalChunks: initialTotalChunks,
-      percent: 0,
-    });
-
     const submitData = {
       file: formData.media,
       category: formData.category,
@@ -211,29 +193,17 @@ export default function SirkulaGreenActionComposite() {
     };
     if (formData.actionType) submitData.actionType = formData.actionType;
 
-    if (uploadStrategy.mode === "chunked-video") {
-      submitData.onChunkProgress = (progress) => {
-        setUploadProgress((previous) => ({
-          ...previous,
-          mode: "chunked-video",
-          ...progress,
-        }));
-      };
-    }
+    setShowForm(false);
 
     createMutation.mutate(submitData, {
       onSuccess: (data) => {
-        setShowForm(false);
         resetForm();
-        setUploadProgress(null);
         if (data?.data?.id && data.data.status !== "REJECTED") {
           setPendingRedirectId(data.data.id);
         }
       },
       onError: () => {
-        setShowForm(false);
         resetForm();
-        setUploadProgress(null);
       },
     });
   };
@@ -479,7 +449,7 @@ export default function SirkulaGreenActionComposite() {
               <Label htmlFor="media" className="text-sm font-medium">
                 Upload Media (Gambar/Video) *{" "}
                 <span className="text-xs text-muted-foreground">
-                  {`(Gambar maks. ${maxImageSizeLabel}, Video maks. ${maxVideoSizeLabel}. Video di atas ${maxImageSizeLabel} akan diunggah per chunk 512 KB)`}
+                  {`(Gambar maks. ${maxImageSizeLabel}, Video maks. ${maxVideoSizeLabel})`}
                 </span>
               </Label>
               <Input
@@ -522,28 +492,6 @@ export default function SirkulaGreenActionComposite() {
               )}
             </div>
 
-            {createMutation.isPending &&
-              uploadProgress?.mode === "chunked-video" && (
-                <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">
-                  <div className="flex items-center justify-between text-xs sm:text-sm">
-                    <span className="font-medium text-emerald-800">
-                      Upload video bertahap
-                    </span>
-                    <span className="font-semibold text-emerald-700">
-                      {uploadProgress.percent || 0}%
-                    </span>
-                  </div>
-                  <Progress
-                    value={uploadProgress.percent || 0}
-                    className="h-2"
-                  />
-                  <p className="text-xs text-emerald-700">
-                    Chunk {uploadProgress.uploadedChunks || 0} dari{" "}
-                    {uploadProgress.totalChunks || 0}
-                  </p>
-                </div>
-              )}
-
             <Button
               type="submit"
               className="w-full gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-base font-medium"
@@ -560,9 +508,7 @@ export default function SirkulaGreenActionComposite() {
               {createMutation.isPending ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  {uploadProgress?.mode === "chunked-video"
-                    ? `Mengunggah ${uploadProgress.percent || 0}%`
-                    : "Mengirim Aksi Hijau..."}
+                  Mengirim Aksi Hijau...
                 </>
               ) : (
                 <>
