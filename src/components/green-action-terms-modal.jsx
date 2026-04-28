@@ -88,8 +88,8 @@ const termsItems = [
     icon: AlertTriangle,
     color: "text-orange-600",
     bg: "bg-orange-50",
-    title: "Maksimal 15 Aksi/Hari",
-    desc: "Anda hanya dapat mengirimkan maksimal 15 aksi per hari untuk semua kategori.",
+    title: "Maksimal 3 Aksi/Hari per Kategori",
+    desc: "Anda hanya dapat mengirimkan maksimal 3 aksi per hari untuk setiap kategori. Batas ini berlaku secara terpisah untuk masing-masing kategori.",
   },
   {
     icon: Brain,
