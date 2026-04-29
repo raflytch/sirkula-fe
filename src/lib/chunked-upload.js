@@ -32,7 +32,11 @@ async function directUpload(file, actionData) {
   appendActionFieldsToFormData(formData, actionData);
   formData.append("media", file);
 
-  const response = await httpClient.post("/green-actions", formData);
+  const response = await httpClient.post("/green-actions", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 }
